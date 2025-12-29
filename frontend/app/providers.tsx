@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { BookingFlowProvider } from '@/contexts/BookingFlowContext';
 import { APIStatus } from '@/components/APIStatus';
 import { useState } from 'react';
 
@@ -36,9 +37,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {children}
-        {/* Show API status indicator in development */}
-        {process.env.NODE_ENV === 'development' && <APIStatus />}
+        <BookingFlowProvider>
+          {children}
+          {/* Show API status indicator in development */}
+          {process.env.NODE_ENV === 'development' && <APIStatus />}
+        </BookingFlowProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
