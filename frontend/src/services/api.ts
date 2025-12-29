@@ -1,8 +1,8 @@
 import type { Itinerary } from '../types';
 import { isAuthError, extractErrorMessage } from '../utils/apiErrorHandler';
 
-// Use relative URLs in development to leverage Vite proxy, or use env variable for production
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'http://localhost:8000');
+// Use relative URLs in development to leverage Next.js proxy, or use env variable for production
+const API_BASE_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
 // Global auth error handler
 let onAuthError: (() => void) | null = null;
@@ -1336,6 +1336,16 @@ export const api = {
       // Fallback: return mock data
       return getMockItinerary();
     }
+  },
+
+  /**
+   * PNR: Parse PNR text
+   * Note: This endpoint may not be implemented yet
+   */
+  async parsePNR(booking_id: string, pnr_text: string, token: string): Promise<any> {
+    // Placeholder implementation
+    console.warn('parsePNR not implemented yet');
+    throw new Error('PNR parsing not implemented');
   },
 };
 

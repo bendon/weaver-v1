@@ -341,7 +341,7 @@ function BookingDetailView({ bookingId, booking, isLoading }: BookingDetailViewP
                     }
                     
                     const isValidDate = departureTime && !isNaN(departureTime.getTime());
-                    const formattedDate = isValidDate ? format(departureTime, 'MMM d, yyyy HH:mm') : 'TBD';
+                    const formattedDate = isValidDate && departureTime ? format(departureTime, 'MMM d, yyyy HH:mm') : 'TBD';
                     
                     return (
                       <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
