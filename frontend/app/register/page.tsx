@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Building2, User, Mail, Lock, ArrowRight, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import '../../src/views/LoginView.css';
+import './register.css';
 
 type Step = 1 | 2 | 3;
 
@@ -96,32 +97,25 @@ function RegisterPageContent() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card" style={{ maxWidth: '600px' }}>
-        <div className="login-header">
-          <Building2 size={32} className="login-logo" />
+    <div className="register-container">
+      <div className="register-card">
+        <div className="register-header">
+          <Building2 size={32} style={{ color: 'var(--text-primary)', marginBottom: 'var(--spacing-md)' }} />
           <h1>Create Your Organization</h1>
           <p>Get started with TravelWeaver in 3 simple steps</p>
         </div>
 
         {/* Progress indicator */}
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+        <div className="progress-indicator">
+          <div className="progress-bar">
             {[1, 2, 3].map((s) => (
               <div
                 key={s}
-                style={{
-                  flex: 1,
-                  height: '4px',
-                  backgroundColor: s <= step ? '#0073E6' : '#e5e7eb',
-                  marginRight: s < 3 ? '0.5rem' : 0,
-                  borderRadius: '2px',
-                  transition: 'background-color 0.3s',
-                }}
+                className={`progress-step ${s <= step ? 'active' : ''}`}
               />
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#6b7280' }}>
+          <div className="progress-labels">
             <span>Organization</span>
             <span>Admin Account</span>
             <span>Plan</span>
@@ -182,20 +176,18 @@ function RegisterPageContent() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+            <div className="form-actions">
               <button
                 type="button"
                 className="link-button"
                 onClick={() => router.push('/login')}
-                style={{ flex: 1 }}
               >
                 Back to Login
               </button>
               <button
                 type="button"
-                className="login-button"
+                className="btn-primary"
                 onClick={handleNext}
-                style={{ flex: 1 }}
               >
                 Next
                 <ArrowRight size={20} />
@@ -269,21 +261,19 @@ function RegisterPageContent() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+            <div className="form-actions">
               <button
                 type="button"
-                className="login-button"
+                className="btn-secondary"
                 onClick={handleBack}
-                style={{ flex: 1, background: '#f3f4f6', color: '#374151' }}
               >
                 <ArrowLeft size={20} />
                 Back
               </button>
               <button
                 type="button"
-                className="login-button"
+                className="btn-primary"
                 onClick={handleNext}
-                style={{ flex: 1 }}
               >
                 Next
                 <ArrowRight size={20} />
@@ -295,11 +285,11 @@ function RegisterPageContent() {
         {/* Step 3: Plan Selection */}
         {step === 3 && (
           <div>
-            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+            <p style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--text-secondary)' }}>
               Choose a plan to get started. You can change this later.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
               {[
                 { id: 'starter', name: 'Starter', price: 'Free', features: ['Up to 10 bookings/month', 'Basic support'] },
                 { id: 'professional', name: 'Professional', price: '$49/month', features: ['Unlimited bookings', 'Priority support', 'Advanced features'] },
@@ -309,24 +299,16 @@ function RegisterPageContent() {
                   key={plan.id}
                   type="button"
                   onClick={() => setSelectedPlan(plan.id)}
-                  style={{
-                    padding: '1rem',
-                    border: selectedPlan === plan.id ? '2px solid #0073E6' : '1px solid #e5e7eb',
-                    borderRadius: '0.5rem',
-                    background: selectedPlan === plan.id ? '#eff6ff' : 'white',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                  }}
+                  className={`plan-card ${selectedPlan === plan.id ? 'selected' : ''}`}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <div className="plan-header">
                     <div>
-                      <div style={{ fontWeight: 600, color: '#111827' }}>{plan.name}</div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{plan.price}</div>
+                      <div className="plan-name">{plan.name}</div>
+                      <div className="plan-price">{plan.price}</div>
                     </div>
-                    {selectedPlan === plan.id && <Check size={20} color="#0073E6" />}
+                    {selectedPlan === plan.id && <Check size={20} style={{ color: 'var(--text-primary)' }} />}
                   </div>
-                  <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                  <ul className="plan-features">
                     {plan.features.map((feature, idx) => (
                       <li key={idx}>{feature}</li>
                     ))}
@@ -335,22 +317,20 @@ function RegisterPageContent() {
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+            <div className="form-actions">
               <button
                 type="button"
-                className="login-button"
+                className="btn-secondary"
                 onClick={handleBack}
-                style={{ flex: 1, background: '#f3f4f6', color: '#374151' }}
               >
                 <ArrowLeft size={20} />
                 Back
               </button>
               <button
                 type="button"
-                className="login-button"
+                className="btn-primary"
                 onClick={handleSubmit}
                 disabled={loading}
-                style={{ flex: 1 }}
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
                 <ArrowRight size={20} />

@@ -1,7 +1,7 @@
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  background: #f9fafb;
+  background: var(--bg-primary);
 }
 
 .dashboard-main {
@@ -14,8 +14,9 @@
 
 .dashboard-content {
   flex: 1;
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
   overflow-y: auto;
+  background: var(--bg-primary);
 }
 
 @media (max-width: 1024px) {
@@ -26,7 +27,6 @@
 
 @media (max-width: 768px) {
   .dashboard-content {
-    padding: 1rem;
+    padding: var(--spacing-md);
   }
 }
-
