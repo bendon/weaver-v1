@@ -1386,3 +1386,160 @@ def delete_booking(booking_id: str) -> bool:
         print(f"Error deleting booking: {e}")
         return False
 
+
+# ============================================================
+# CONVERSATIONS (AI Chat)
+# ============================================================
+
+def create_conversation(
+    organization_id: str,
+    user_id: Optional[str] = None,
+    booking_id: Optional[str] = None,
+    conversation_type: str = "booking"
+) -> str:
+    """Create a new conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        conversation_id = generate_id()
+
+        cursor.execute("""
+            INSERT INTO conversations (
+                id, organization_id, user_id, booking_id, conversation_type, status
+            ) VALUES (?, ?, ?, ?, ?, 'active')
+        """, (conversation_id, organization_id, user_id, booking_id, conversation_type))
+
+        conn.commit()
+        conn.close()
+        return conversation_id
+    except Exception as e:
+        print(f"Error creating conversation: {e}")
+        return None
+
+
+def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
+    """Get conversation by ID"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM conversations WHERE id = ?", (conversation_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
+    except Exception as e:
+        print(f"Error getting conversation: {e}")
+        return None
+
+
+def get_conversations_by_user(user_id: str, organization_id: str) -> List[Dict[str, Any]]:
+    """Get all conversations for a user"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM conversations
+            WHERE user_id = ? AND organization_id = ?
+            ORDER BY updated_at DESC
+        """, (user_id, organization_id))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"Error getting conversations: {e}")
+        return []
+
+
+def update_conversation(conversation_id: str, **kwargs) -> bool:
+    """Update conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        updates = []
+        values = []
+        for key, value in kwargs.items():
+            if value is not None:
+                updates.append(f"{key} = ?")
+                values.append(value)
+
+        if not updates:
+            return False
+
+        values.append(conversation_id)
+        cursor.execute(f"""
+            UPDATE conversations
+            SET {', '.join(updates)}, updated_at = datetime('now')
+            WHERE id = ?
+        """, values)
+        conn.commit()
+        conn.close()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating conversation: {e}")
+        return False
+
+
+def add_conversation_message(
+    conversation_id: str,
+    role: str,
+    content: str,
+    tool_calls: Optional[List[Dict[str, Any]]] = None,
+    tool_call_id: Optional[str] = None
+) -> str:
+    """Add a message to a conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        message_id = generate_id()
+
+        tool_calls_json = json.dumps(tool_calls) if tool_calls else None
+
+        cursor.execute("""
+            INSERT INTO conversation_messages (
+                id, conversation_id, role, content, tool_calls, tool_call_id
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        """, (message_id, conversation_id, role, content, tool_calls_json, tool_call_id))
+
+        # Update conversation's updated_at timestamp
+        cursor.execute("""
+            UPDATE conversations
+            SET updated_at = datetime('now')
+            WHERE id = ?
+        """, (conversation_id,))
+
+        conn.commit()
+        conn.close()
+        return message_id
+    except Exception as e:
+        print(f"Error adding conversation message: {e}")
+        return None
+
+
+def get_conversation_messages(conversation_id: str) -> List[Dict[str, Any]]:
+    """Get all messages in a conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM conversation_messages
+            WHERE conversation_id = ?
+            ORDER BY created_at ASC
+        """, (conversation_id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        messages = []
+        for row in rows:
+            msg = dict(row)
+            if msg.get('tool_calls'):
+                try:
+                    msg['tool_calls'] = json.loads(msg['tool_calls'])
+                except:
+                    msg['tool_calls'] = None
+            messages.append(msg)
+
+        return messages
+    except Exception as e:
+        print(f"Error getting conversation messages: {e}")
+        return []
+
