@@ -4,7 +4,10 @@ import { Suspense } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import dynamic from 'next/dynamic';
 
-const MessageCenter = dynamic(() => import('@/components/messages/MessageCenter'), { ssr: false });
+const MessageCenter = dynamic(
+  () => import('@/components/messages/MessageCenter').then(mod => ({ default: mod.MessageCenter })),
+  { ssr: false }
+);
 
 function MessagesPageContent() {
   return (
