@@ -1,0 +1,189 @@
+.booking-detail {
+  padding: 0;
+}
+
+.booking-detail-header {
+  margin-bottom: 2rem;
+}
+
+.booking-code-large {
+  font-family: monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.booking-detail-title-section h1 {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.75rem;
+}
+
+.booking-detail-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+.booking-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.booking-tab:hover {
+  color: #111827;
+  background: #f9fafb;
+}
+
+.booking-tab.active {
+  color: #0073E6;
+  border-bottom-color: #0073E6;
+  font-weight: 500;
+}
+
+.booking-detail-content {
+  padding: 0;
+}
+
+.booking-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.booking-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.booking-stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.booking-stat-card h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+}
+
+.booking-stat-card .stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.booking-info-section,
+.booking-notes-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.booking-info-section h3,
+.booking-notes-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.booking-info-section dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem 2rem;
+}
+
+.booking-info-section dt {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.booking-info-section dd {
+  margin: 0;
+  color: #111827;
+}
+
+.travelers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.traveler-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.traveler-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #0073E6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.traveler-info {
+  flex: 1;
+}
+
+.traveler-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+}
+
+.traveler-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+

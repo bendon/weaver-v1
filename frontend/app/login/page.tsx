@@ -130,18 +130,39 @@ function LoginPageContent() {
         </form>
 
         <div className="login-footer">
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-            }}
-          >
-            {isLogin
-              ? "Don't have an account? Register"
-              : 'Already have an account? Login'}
-          </button>
+          {isLogin ? (
+            <>
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => router.push('/register')}
+              >
+                Create an account
+              </button>
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => {
+                  setIsLogin(false);
+                  setError('');
+                }}
+                style={{ marginTop: '0.5rem' }}
+              >
+                Register existing organization
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => {
+                setIsLogin(true);
+                setError('');
+              }}
+            >
+              Already have an account? Login
+            </button>
+          )}
         </div>
       </div>
     </div>
