@@ -1,0 +1,383 @@
+/* New Booking Page - Using CSS Variables */
+
+.new-booking-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Progress Steps */
+.booking-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) 0;
+  margin-bottom: var(--spacing-2xl);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.booking-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  position: relative;
+  opacity: 0.5;
+  transition: all var(--transition-base);
+}
+
+.booking-step.active {
+  opacity: 1;
+}
+
+.booking-step.completed {
+  opacity: 1;
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
+}
+
+.booking-step.active .step-icon {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+.booking-step.completed .step-icon {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+.step-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.booking-step.active .step-label {
+  color: var(--text-primary);
+}
+
+.step-connector {
+  position: absolute;
+  left: 100%;
+  top: 24px;
+  width: 100px;
+  height: 2px;
+  background: var(--border-color);
+  margin-left: 8px;
+}
+
+.booking-step.completed .step-connector {
+  background: var(--text-primary);
+}
+
+/* Content */
+.booking-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-xl);
+  min-height: 500px;
+  box-shadow: var(--shadow-sm);
+}
+
+.step-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 var(--spacing-xl) 0;
+  color: var(--text-primary);
+}
+
+.step-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+  color: var(--text-primary);
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: all var(--transition-base);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.form-group textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Travelers Section */
+.travelers-section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.travelers-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.traveler-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.traveler-option:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-hover);
+}
+
+.traveler-option.selected {
+  border-color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.traveler-option input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.traveler-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.traveler-info strong {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.traveler-info span {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Add Traveler Section */
+.add-traveler-section {
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+/* Flight Section */
+.selected-flight-info {
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.flight-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.flight-summary strong {
+  display: block;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.flight-summary p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.no-flight-selected {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--text-secondary);
+}
+
+.no-flight-selected p {
+  margin-bottom: var(--spacing-lg);
+}
+
+.skip-option {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Review Section */
+.review-section {
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.review-section:last-child {
+  margin-bottom: 0;
+}
+
+.review-section dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+.review-section dt {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.review-section dd {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.review-section ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--spacing-md) 0 0 0;
+}
+
+.review-section li {
+  padding: var(--spacing-sm) 0;
+  color: var(--text-primary);
+}
+
+/* Navigation */
+.booking-navigation {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) 0;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: none;
+}
+
+.btn-primary {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--text-primary);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .booking-steps {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: var(--spacing-lg) 0;
+  }
+
+  .booking-step {
+    min-width: 80px;
+  }
+
+  .step-connector {
+    width: 60px;
+  }
+
+  .booking-content {
+    padding: var(--spacing-lg);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .step-content h2 {
+    font-size: 1.25rem;
+  }
+}

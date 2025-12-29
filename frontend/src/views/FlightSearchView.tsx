@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { format, addDays } from 'date-fns';
+import { useBookingFlow } from '../contexts/BookingFlowContext';
 import './FlightSearchView.css';
 
 export default function FlightSearchView() {
-  const navigate = useNavigate();
+  const router = useRouter();
+  const { selectFlight } = useBookingFlow();
 
   const [searchParams, setSearchParams] = useState({
     origin: '',
@@ -106,7 +108,7 @@ export default function FlightSearchView() {
     <div className="flight-search-view">
       <div className="flight-search-container">
         <header className="search-header">
-          <button className="back-btn" onClick={() => navigate('/dmc')}>
+          <button className="back-btn" onClick={() => router.push('/dmc')}>
             ← Back
           </button>
           <h1>Flight Search ✈️</h1>
@@ -311,7 +313,15 @@ export default function FlightSearchView() {
                       </div>
                     </div>
                   ))}
-                  <button className="select-flight-btn">Select Flight</button>
+                  <button
+                    className="select-flight-btn"
+                    onClick={() => {
+                      selectFlight(offer, searchParams);
+                      router.push('/bookings/new');
+                    }}
+                  >
+                    Select Flight
+                  </button>
                 </div>
               ))}
             </div>

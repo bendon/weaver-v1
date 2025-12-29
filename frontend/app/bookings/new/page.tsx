@@ -1,22 +1,428 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { format, addDays } from 'date-fns';
+import { Plus, Plane, Hotel, Users, ArrowRight, Calendar, Check } from 'lucide-react';
+import { api } from '@/services/api';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useBookingFlow } from '@/contexts/BookingFlowContext';
+import './new-booking.css';
+
+type Step = 'details' | 'travelers' | 'flights' | 'review';
 
 export default function NewBookingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const { state: flowState, setBookingId, clearFlow } = useBookingFlow();
 
-  useEffect(() => {
-    // Redirect to chat with new booking intent
-    const intent = searchParams.get('intent') || 'new_booking';
-    router.replace(`/chat?intent=${intent}`);
-  }, [router, searchParams]);
+  const [currentStep, setCurrentStep] = useState<Step>('details');
+  const [tripDetails, setTripDetails] = useState({
+    title: '',
+    start_date: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+    end_date: format(addDays(new Date(), 14), 'yyyy-MM-dd'),
+    total_travelers: 1,
+    notes: '',
+  });
+
+  const [selectedTravelers, setSelectedTravelers] = useState<string[]>([]);
+  const [newTraveler, setNewTraveler] = useState({
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+  });
+
+  // Fetch existing travelers
+  const { data: travelersData } = useQuery({
+    queryKey: ['travelers'],
+    queryFn: () => api.getTravelers(),
+  });
+
+  const travelers = travelersData?.travelers || [];
+
+  // Create booking mutation
+  const createBookingMutation = useMutation({
+    mutationFn: async () => {
+      const booking = await api.createBooking(
+        tripDetails.title,
+        tripDetails.start_date,
+        tripDetails.end_date,
+        tripDetails.total_travelers,
+        tripDetails.notes
+      );
+
+      // Link selected travelers
+      for (const travelerId of selectedTravelers) {
+        await api.linkTravelerToBooking(
+          booking.id,
+          travelerId,
+          travelerId === selectedTravelers[0]
+        );
+      }
+
+      // If there's a selected flight from flow, add it
+      if (flowState.selectedFlight) {
+        const flight = flowState.selectedFlight.offer;
+        const searchParams = flowState.selectedFlight.searchParams;
+
+        // Extract flight details from Amadeus offer
+        const outbound = flight.itineraries?.[0];
+        const firstSegment = outbound?.segments?.[0];
+        const lastSegment = outbound?.segments?.[outbound.segments.length - 1];
+
+        if (firstSegment && lastSegment) {
+          await api.addFlightToBooking(booking.id, {
+            airline: firstSegment.carrierCode,
+            flight_number: firstSegment.number,
+            departure_airport: firstSegment.departure.iataCode,
+            arrival_airport: lastSegment.arrival.iataCode,
+            departure_time: firstSegment.departure.at,
+            arrival_time: lastSegment.arrival.at,
+            booking_reference: flight.id, // Use offer ID as temp reference
+            status: 'confirmed',
+          });
+        }
+      }
+
+      return booking;
+    },
+    onSuccess: (booking) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      setBookingId(booking.id);
+      router.push(`/bookings/${booking.id}`);
+    },
+  });
+
+  // Create traveler mutation
+  const createTravelerMutation = useMutation({
+    mutationFn: () => api.createTraveler(
+      newTraveler.first_name,
+      newTraveler.last_name,
+      newTraveler.phone,
+      newTraveler.email
+    ),
+    onSuccess: (traveler) => {
+      queryClient.invalidateQueries({ queryKey: ['travelers'] });
+      setSelectedTravelers([...selectedTravelers, traveler.id]);
+      setNewTraveler({ first_name: '', last_name: '', phone: '', email: '' });
+    },
+  });
+
+  const handleNext = () => {
+    if (currentStep === 'details') {
+      if (!tripDetails.title || !tripDetails.start_date || !tripDetails.end_date) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      setCurrentStep('travelers');
+    } else if (currentStep === 'travelers') {
+      if (selectedTravelers.length === 0) {
+        alert('Please add at least one traveler');
+        return;
+      }
+      setCurrentStep('flights');
+    } else if (currentStep === 'flights') {
+      setCurrentStep('review');
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep === 'travelers') setCurrentStep('details');
+    else if (currentStep === 'flights') setCurrentStep('travelers');
+    else if (currentStep === 'review') setCurrentStep('flights');
+  };
+
+  const handleCreateBooking = () => {
+    createBookingMutation.mutate();
+  };
+
+  const toggleTraveler = (id: string) => {
+    setSelectedTravelers(prev =>
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
+  };
+
+  const steps = [
+    { id: 'details', label: 'Trip Details', icon: Calendar },
+    { id: 'travelers', label: 'Travelers', icon: Users },
+    { id: 'flights', label: 'Flights', icon: Plane },
+    { id: 'review', label: 'Review', icon: Check },
+  ];
+
+  const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      Redirecting to AI Assistant...
-    </div>
+    <DashboardLayout
+      title="Create New Booking"
+      breadcrumbs={[
+        { label: 'Bookings', href: '/bookings' },
+        { label: 'New Booking' },
+      ]}
+    >
+      <div className="new-booking-page">
+        {/* Progress Steps */}
+        <div className="booking-steps">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = step.id === currentStep;
+            const isCompleted = index < currentStepIndex;
+
+            return (
+              <div
+                key={step.id}
+                className={`booking-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+              >
+                <div className="step-icon">
+                  {isCompleted ? <Check size={20} /> : <Icon size={20} />}
+                </div>
+                <div className="step-label">{step.label}</div>
+                {index < steps.length - 1 && <div className="step-connector" />}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Step Content */}
+        <div className="booking-content">
+          {currentStep === 'details' && (
+            <div className="step-content">
+              <h2>Trip Details</h2>
+              <div className="form-group">
+                <label>Trip Title *</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Kenya Safari Adventure"
+                  value={tripDetails.title}
+                  onChange={(e) => setTripDetails({ ...tripDetails, title: e.target.value })}
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Start Date *</label>
+                  <input
+                    type="date"
+                    value={tripDetails.start_date}
+                    onChange={(e) => setTripDetails({ ...tripDetails, start_date: e.target.value })}
+                    min={format(new Date(), 'yyyy-MM-dd')}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>End Date *</label>
+                  <input
+                    type="date"
+                    value={tripDetails.end_date}
+                    onChange={(e) => setTripDetails({ ...tripDetails, end_date: e.target.value })}
+                    min={tripDetails.start_date}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Number of Travelers</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={tripDetails.total_travelers}
+                  onChange={(e) => setTripDetails({ ...tripDetails, total_travelers: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Notes (Optional)</label>
+                <textarea
+                  placeholder="Add any special requirements or notes..."
+                  value={tripDetails.notes}
+                  onChange={(e) => setTripDetails({ ...tripDetails, notes: e.target.value })}
+                  rows={4}
+                />
+              </div>
+            </div>
+          )}
+
+          {currentStep === 'travelers' && (
+            <div className="step-content">
+              <h2>Select Travelers</h2>
+
+              {/* Existing Travelers */}
+              {travelers.length > 0 && (
+                <div className="travelers-section">
+                  <h3>Existing Travelers</h3>
+                  <div className="travelers-list">
+                    {travelers.map((traveler: any) => (
+                      <div
+                        key={traveler.id}
+                        className={`traveler-option ${selectedTravelers.includes(traveler.id) ? 'selected' : ''}`}
+                        onClick={() => toggleTraveler(traveler.id)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedTravelers.includes(traveler.id)}
+                          onChange={() => {}}
+                        />
+                        <div className="traveler-info">
+                          <strong>{traveler.first_name} {traveler.last_name}</strong>
+                          <span>{traveler.email || traveler.phone}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add New Traveler */}
+              <div className="add-traveler-section">
+                <h3>Add New Traveler</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>First Name</label>
+                    <input
+                      type="text"
+                      value={newTraveler.first_name}
+                      onChange={(e) => setNewTraveler({ ...newTraveler, first_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Last Name</label>
+                    <input
+                      type="text"
+                      value={newTraveler.last_name}
+                      onChange={(e) => setNewTraveler({ ...newTraveler, last_name: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Phone</label>
+                    <input
+                      type="tel"
+                      value={newTraveler.phone}
+                      onChange={(e) => setNewTraveler({ ...newTraveler, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={newTraveler.email}
+                      onChange={(e) => setNewTraveler({ ...newTraveler, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <button
+                  className="btn-secondary"
+                  onClick={() => createTravelerMutation.mutate()}
+                  disabled={!newTraveler.first_name || !newTraveler.last_name || !newTraveler.phone}
+                >
+                  <Plus size={16} />
+                  Add Traveler
+                </button>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 'flights' && (
+            <div className="step-content">
+              <h2>Add Flights</h2>
+
+              {flowState.selectedFlight ? (
+                <div className="selected-flight-info">
+                  <h3>Selected Flight</h3>
+                  <div className="flight-summary">
+                    <Plane size={24} />
+                    <div>
+                      <strong>
+                        {flowState.selectedFlight.offer.itineraries?.[0]?.segments?.[0]?.departure?.iataCode}
+                        {' → '}
+                        {flowState.selectedFlight.offer.itineraries?.[0]?.segments?.slice(-1)[0]?.arrival?.iataCode}
+                      </strong>
+                      <p>
+                        {flowState.selectedFlight.offer.price?.total} {flowState.selectedFlight.offer.price?.currency}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-flight-selected">
+                  <p>No flight selected yet</p>
+                  <button
+                    className="btn-primary"
+                    onClick={() => router.push('/flights/search')}
+                  >
+                    <Plane size={16} />
+                    Search Flights
+                  </button>
+                </div>
+              )}
+
+              <div className="skip-option">
+                <p>You can also skip this step and add flights later</p>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 'review' && (
+            <div className="step-content">
+              <h2>Review & Create</h2>
+
+              <div className="review-section">
+                <h3>Trip Details</h3>
+                <dl>
+                  <dt>Title:</dt>
+                  <dd>{tripDetails.title}</dd>
+                  <dt>Dates:</dt>
+                  <dd>{format(new Date(tripDetails.start_date), 'MMM d, yyyy')} - {format(new Date(tripDetails.end_date), 'MMM d, yyyy')}</dd>
+                  <dt>Travelers:</dt>
+                  <dd>{selectedTravelers.length} selected</dd>
+                </dl>
+              </div>
+
+              <div className="review-section">
+                <h3>Travelers</h3>
+                <ul>
+                  {selectedTravelers.map(id => {
+                    const traveler = travelers.find((t: any) => t.id === id);
+                    return traveler ? (
+                      <li key={id}>{traveler.first_name} {traveler.last_name}</li>
+                    ) : null;
+                  })}
+                </ul>
+              </div>
+
+              {flowState.selectedFlight && (
+                <div className="review-section">
+                  <h3>Flight</h3>
+                  <p>1 flight included</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="booking-navigation">
+          {currentStep !== 'details' && (
+            <button className="btn-secondary" onClick={handleBack}>
+              Back
+            </button>
+          )}
+          <div style={{ flex: 1 }} />
+          {currentStep !== 'review' ? (
+            <button className="btn-primary" onClick={handleNext}>
+              Next
+              <ArrowRight size={16} />
+            </button>
+          ) : (
+            <button
+              className="btn-primary"
+              onClick={handleCreateBooking}
+              disabled={createBookingMutation.isPending}
+            >
+              {createBookingMutation.isPending ? 'Creating...' : 'Create Booking'}
+            </button>
+          )}
+        </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
