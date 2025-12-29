@@ -7,6 +7,7 @@ import { Plus, Search, Filter, Table, Grid, Calendar } from 'lucide-react';
 import { api } from '@/services/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { format } from 'date-fns';
+import { SkeletonBookingCard, SkeletonTable } from '@/components/Skeleton';
 import './bookings.css';
 
 function BookingsPageContent() {
@@ -98,7 +99,17 @@ function BookingsPageContent() {
 
         {/* Bookings List */}
         {isLoading ? (
-          <div className="bookings-loading">Loading bookings...</div>
+          viewMode === 'table' ? (
+            <div className="bookings-table-container">
+              <SkeletonTable rows={8} columns={7} />
+            </div>
+          ) : (
+            <div className="bookings-grid">
+              {Array.from({ length: 6 }, (_, i) => (
+                <SkeletonBookingCard key={i} />
+              ))}
+            </div>
+          )
         ) : bookings.length === 0 ? (
           <div className="bookings-empty">
             <Calendar size={48} />

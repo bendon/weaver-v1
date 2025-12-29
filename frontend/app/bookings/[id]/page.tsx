@@ -7,6 +7,7 @@ import { ArrowLeft, Edit, Copy, Send, Download, Trash2, Calendar, Users, Plane, 
 import { api } from '@/services/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { format } from 'date-fns';
+import { Skeleton, SkeletonCard, SkeletonText } from '@/components/Skeleton';
 import '../bookings.css';
 import './booking-detail.css';
 
@@ -77,7 +78,23 @@ function BookingDetailContent() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading booking...</div>
+        <div style={{ padding: '2rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <Skeleton width="200px" height="2rem" />
+            <Skeleton width="120px" height="1rem" style={{ marginTop: '0.5rem' }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+            {Array.from({ length: 4 }, (_, i) => (
+              <SkeletonCard key={i}>
+                <Skeleton width="80px" height="1rem" />
+                <Skeleton width="60px" height="2rem" style={{ marginTop: '0.5rem' }} />
+              </SkeletonCard>
+            ))}
+          </div>
+          <SkeletonCard>
+            <SkeletonText lines={5} />
+          </SkeletonCard>
+        </div>
       </DashboardLayout>
     );
   }
@@ -228,7 +245,19 @@ function BookingDetailContent() {
           {activeTab === 'travelers' && (
             <div className="booking-travelers">
               {travelersLoading ? (
-                <p>Loading travelers...</p>
+                <div className="travelers-list">
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <SkeletonCard key={i}>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <Skeleton width="48px" height="48px" circle />
+                        <div style={{ flex: 1 }}>
+                          <Skeleton width="150px" height="1rem" />
+                          <Skeleton width="200px" height="0.875rem" style={{ marginTop: '0.5rem' }} />
+                        </div>
+                      </div>
+                    </SkeletonCard>
+                  ))}
+                </div>
               ) : travelers && travelers.length > 0 ? (
                 <div className="travelers-list">
                   {travelers.map((traveler: any, idx: number) => (
@@ -263,7 +292,26 @@ function BookingDetailContent() {
           {activeTab === 'flights' && (
             <div className="booking-flights">
               {flightsLoading ? (
-                <p>Loading flights...</p>
+                <div className="flights-list">
+                  {Array.from({ length: 2 }, (_, i) => (
+                    <SkeletonCard key={i}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <Skeleton width="200px" height="1.25rem" />
+                      </div>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                          <Skeleton width="80px" height="2rem" />
+                          <Skeleton width="120px" height="0.875rem" style={{ marginTop: '0.5rem' }} />
+                        </div>
+                        <Skeleton width="24px" height="24px" />
+                        <div style={{ flex: 1 }}>
+                          <Skeleton width="80px" height="2rem" />
+                          <Skeleton width="120px" height="0.875rem" style={{ marginTop: '0.5rem' }} />
+                        </div>
+                      </div>
+                    </SkeletonCard>
+                  ))}
+                </div>
               ) : flights && flights.length > 0 ? (
                 <div className="flights-list">
                   {flights.map((flight: any, idx: number) => (

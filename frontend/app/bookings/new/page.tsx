@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, addDays } from 'date-fns';
-import { Plus, Plane, Hotel, Users, ArrowRight, Calendar, Check } from 'lucide-react';
+import { Plus, Plane, Hotel, Users, ArrowRight, Calendar, Check, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { api } from '@/services/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useBookingFlow } from '@/contexts/BookingFlowContext';
+import { Skeleton } from '@/components/Skeleton';
 import './new-booking.css';
 
 type Step = 'details' | 'travelers' | 'flights' | 'review';
@@ -35,7 +37,7 @@ export default function NewBookingPage() {
   });
 
   // Fetch existing travelers
-  const { data: travelersData } = useQuery({
+  const { data: travelersData, isLoading: travelersLoading } = useQuery({
     queryKey: ['travelers'],
     queryFn: () => api.getTravelers(),
   });
@@ -91,7 +93,13 @@ export default function NewBookingPage() {
     onSuccess: (booking) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       setBookingId(booking.id);
-      router.push(`/bookings/${booking.id}`);
+      toast.success('Booking created successfully!');
+      setTimeout(() => {
+        router.push(`/bookings/${booking.id}`);
+      }, 500);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create booking. Please try again.');
     },
   });
 
@@ -107,19 +115,23 @@ export default function NewBookingPage() {
       queryClient.invalidateQueries({ queryKey: ['travelers'] });
       setSelectedTravelers([...selectedTravelers, traveler.id]);
       setNewTraveler({ first_name: '', last_name: '', phone: '', email: '' });
+      toast.success(`${traveler.first_name} ${traveler.last_name} added successfully!`);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to add traveler. Please try again.');
     },
   });
 
   const handleNext = () => {
     if (currentStep === 'details') {
       if (!tripDetails.title || !tripDetails.start_date || !tripDetails.end_date) {
-        alert('Please fill in all required fields');
+        toast.error('Please fill in all required fields');
         return;
       }
       setCurrentStep('travelers');
     } else if (currentStep === 'travelers') {
       if (selectedTravelers.length === 0) {
-        alert('Please add at least one traveler');
+        toast.error('Please add at least one traveler');
         return;
       }
       setCurrentStep('flights');
@@ -244,7 +256,22 @@ export default function NewBookingPage() {
               <h2>Select Travelers</h2>
 
               {/* Existing Travelers */}
-              {travelers.length > 0 && (
+              {travelersLoading ? (
+                <div className="travelers-section">
+                  <h3>Existing Travelers</h3>
+                  <div className="travelers-list">
+                    {Array.from({ length: 3 }, (_, i) => (
+                      <div key={i} className="traveler-option">
+                        <Skeleton width="20px" height="20px" />
+                        <div className="traveler-info" style={{ flex: 1 }}>
+                          <Skeleton width="150px" height="1rem" />
+                          <Skeleton width="200px" height="0.875rem" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : travelers.length > 0 && (
                 <div className="travelers-section">
                   <h3>Existing Travelers</h3>
                   <div className="travelers-list">
@@ -311,10 +338,19 @@ export default function NewBookingPage() {
                 <button
                   className="btn-secondary"
                   onClick={() => createTravelerMutation.mutate()}
-                  disabled={!newTraveler.first_name || !newTraveler.last_name || !newTraveler.phone}
+                  disabled={!newTraveler.first_name || !newTraveler.last_name || !newTraveler.phone || createTravelerMutation.isPending}
                 >
-                  <Plus size={16} />
-                  Add Traveler
+                  {createTravelerMutation.isPending ? (
+                    <>
+                      <Loader2 size={16} className="spinner" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Add Traveler
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -417,7 +453,17 @@ export default function NewBookingPage() {
               onClick={handleCreateBooking}
               disabled={createBookingMutation.isPending}
             >
-              {createBookingMutation.isPending ? 'Creating...' : 'Create Booking'}
+              {createBookingMutation.isPending ? (
+                <>
+                  <Loader2 size={16} className="spinner" />
+                  Creating Booking...
+                </>
+              ) : (
+                <>
+                  <Check size={16} />
+                  Create Booking
+                </>
+              )}
             </button>
           )}
         </div>
