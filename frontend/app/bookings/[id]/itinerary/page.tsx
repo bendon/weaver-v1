@@ -73,8 +73,9 @@ function BookingItineraryContent() {
 
     // Add flights
     flights.forEach((flight: any) => {
-      if (flight.departure_time) {
-        const flightDate = parseISO(flight.departure_time);
+      const departureTime = flight.scheduled_departure || flight.departure_time;
+      if (departureTime) {
+        const flightDate = parseISO(departureTime);
         const key = format(flightDate, 'yyyy-MM-dd');
         if (dayMap[key]) {
           dayMap[key].push({
@@ -103,8 +104,9 @@ function BookingItineraryContent() {
 
     // Add transfers
     transfers.forEach((transfer: any) => {
-      if (transfer.pickup_time) {
-        const transferDate = parseISO(transfer.pickup_time);
+      const transferTime = transfer.scheduled_datetime || transfer.pickup_time;
+      if (transferTime) {
+        const transferDate = parseISO(transferTime);
         const key = format(transferDate, 'yyyy-MM-dd');
         if (dayMap[key]) {
           dayMap[key].push({
@@ -118,8 +120,9 @@ function BookingItineraryContent() {
 
     // Add activities
     activities.forEach((activity: any) => {
-      if (activity.date) {
-        const activityDate = parseISO(activity.date);
+      const activityTime = activity.scheduled_datetime || activity.date;
+      if (activityTime) {
+        const activityDate = parseISO(activityTime);
         const key = format(activityDate, 'yyyy-MM-dd');
         if (dayMap[key]) {
           dayMap[key].push({
@@ -240,7 +243,7 @@ function BookingItineraryContent() {
                                     {item.data.airline_name || item.data.airline || 'Flight'} {item.data.flight_number || ''}
                                   </h4>
                                   <p className="itinerary-item-route">
-                                    {item.data.origin || item.data.departure_airport} → {item.data.destination || item.data.arrival_airport}
+                                    {item.data.departure_airport || item.data.origin} → {item.data.arrival_airport || item.data.destination}
                                   </p>
                                   {item.data.booking_reference && (
                                     <p className="itinerary-item-detail">PNR: <code>{item.data.booking_reference}</code></p>
@@ -283,12 +286,21 @@ function BookingItineraryContent() {
                                     <Clock size={14} />
                                     {format(item.time, 'HH:mm')}
                                   </div>
-                                  <h4>{item.data.type || 'Transfer'}</h4>
+                                  <h4>{item.data.transfer_type || item.data.type || 'Transfer'}</h4>
                                   <p className="itinerary-item-route">
-                                    {item.data.pickup_location || 'Pickup'} → {item.data.dropoff_location || 'Dropoff'}
+                                    {item.data.from_location || item.data.pickup_location || 'Pickup'} → {item.data.to_location || item.data.dropoff_location || 'Dropoff'}
                                   </p>
                                   {item.data.vehicle_type && (
                                     <p className="itinerary-item-detail">Vehicle: {item.data.vehicle_type}</p>
+                                  )}
+                                  {item.data.driver_name && (
+                                    <p className="itinerary-item-detail">Driver: {item.data.driver_name}</p>
+                                  )}
+                                  {item.data.driver_phone && (
+                                    <p className="itinerary-item-detail">Phone: {item.data.driver_phone}</p>
+                                  )}
+                                  {item.data.supplier_name && (
+                                    <p className="itinerary-item-detail">Supplier: {item.data.supplier_name}</p>
                                   )}
                                 </div>
                               </>
@@ -300,13 +312,11 @@ function BookingItineraryContent() {
                                   <Compass size={20} />
                                 </div>
                                 <div className="itinerary-item-content">
-                                  {item.data.time && (
-                                    <div className="itinerary-item-time">
-                                      <Clock size={14} />
-                                      {item.data.time}
-                                    </div>
-                                  )}
-                                  <h4>{item.data.name || item.data.title || 'Activity'}</h4>
+                                  <div className="itinerary-item-time">
+                                    <Clock size={14} />
+                                    {format(item.time, 'HH:mm')}
+                                  </div>
+                                  <h4>{item.data.activity_name || item.data.name || item.data.title || 'Activity'}</h4>
                                   {item.data.description && (
                                     <p className="itinerary-item-description">{item.data.description}</p>
                                   )}
@@ -316,8 +326,17 @@ function BookingItineraryContent() {
                                       {item.data.location}
                                     </p>
                                   )}
-                                  {item.data.duration && (
+                                  {item.data.duration_minutes && (
+                                    <p className="itinerary-item-detail">Duration: {item.data.duration_minutes} minutes</p>
+                                  )}
+                                  {item.data.duration && !item.data.duration_minutes && (
                                     <p className="itinerary-item-detail">Duration: {item.data.duration}</p>
+                                  )}
+                                  {item.data.supplier_name && (
+                                    <p className="itinerary-item-detail">Supplier: {item.data.supplier_name}</p>
+                                  )}
+                                  {item.data.price && (
+                                    <p className="itinerary-item-detail">Price: {item.data.currency || 'USD'} {item.data.price.toLocaleString()}</p>
                                   )}
                                 </div>
                               </>

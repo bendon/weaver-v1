@@ -278,10 +278,10 @@ function BookingDetailContent() {
                       </div>
                       <div className="flight-route">
                         <div className="flight-airport">
-                          <div className="airport-code">{flight.origin || flight.departure_airport || 'N/A'}</div>
+                          <div className="airport-code">{flight.departure_airport || flight.origin || 'N/A'}</div>
                           <div className="airport-time">
-                            {flight.departure_time
-                              ? format(new Date(flight.departure_time), 'MMM d, HH:mm')
+                            {(flight.scheduled_departure || flight.departure_time)
+                              ? format(new Date(flight.scheduled_departure || flight.departure_time), 'MMM d, HH:mm')
                               : 'TBD'
                             }
                           </div>
@@ -290,10 +290,10 @@ function BookingDetailContent() {
                           <Plane size={20} />
                         </div>
                         <div className="flight-airport">
-                          <div className="airport-code">{flight.destination || flight.arrival_airport || 'N/A'}</div>
+                          <div className="airport-code">{flight.arrival_airport || flight.destination || 'N/A'}</div>
                           <div className="airport-time">
-                            {flight.arrival_time
-                              ? format(new Date(flight.arrival_time), 'MMM d, HH:mm')
+                            {(flight.scheduled_arrival || flight.arrival_time)
+                              ? format(new Date(flight.scheduled_arrival || flight.arrival_time), 'MMM d, HH:mm')
                               : 'TBD'
                             }
                           </div>
@@ -402,17 +402,23 @@ function BookingDetailContent() {
                   <div className="transfers-list">
                     {transfers.map((transfer: any, idx: number) => (
                       <div key={transfer.id || transfer.transfer_id || idx} className="activity-card">
-                        <h4>{transfer.type || 'Transfer'}</h4>
+                        <h4>{transfer.transfer_type || transfer.type || 'Transfer'}</h4>
                         <p>
-                          {transfer.pickup_location || 'Pickup'} → {transfer.dropoff_location || 'Dropoff'}
+                          {transfer.from_location || transfer.pickup_location || 'Pickup'} → {transfer.to_location || transfer.dropoff_location || 'Dropoff'}
                         </p>
-                        {transfer.pickup_time && (
+                        {(transfer.scheduled_datetime || transfer.pickup_time) && (
                           <p className="activity-dates">
-                            {format(new Date(transfer.pickup_time), 'MMM d, yyyy HH:mm')}
+                            {format(new Date(transfer.scheduled_datetime || transfer.pickup_time), 'MMM d, yyyy HH:mm')}
                           </p>
                         )}
                         {transfer.vehicle_type && (
                           <p className="activity-detail">Vehicle: {transfer.vehicle_type}</p>
+                        )}
+                        {transfer.driver_name && (
+                          <p className="activity-detail">Driver: {transfer.driver_name}</p>
+                        )}
+                        {transfer.driver_phone && (
+                          <p className="activity-detail">Phone: {transfer.driver_phone}</p>
                         )}
                       </div>
                     ))}
@@ -431,19 +437,27 @@ function BookingDetailContent() {
                   <div className="activities-list">
                     {activities.map((activity: any, idx: number) => (
                       <div key={activity.id || activity.activity_id || idx} className="activity-card">
-                        <h4>{activity.name || activity.title || 'Activity'}</h4>
+                        <h4>{activity.activity_name || activity.name || activity.title || 'Activity'}</h4>
                         <p>{activity.description || 'No description'}</p>
-                        {activity.date && (
+                        {(activity.scheduled_datetime || activity.date) && (
                           <p className="activity-dates">
-                            {format(new Date(activity.date), 'MMM d, yyyy')}
-                            {activity.time && ` at ${activity.time}`}
+                            {format(new Date(activity.scheduled_datetime || activity.date), 'MMM d, yyyy HH:mm')}
                           </p>
                         )}
-                        {activity.duration && (
+                        {activity.duration_minutes && (
+                          <p className="activity-detail">Duration: {activity.duration_minutes} minutes</p>
+                        )}
+                        {activity.duration && !activity.duration_minutes && (
                           <p className="activity-detail">Duration: {activity.duration}</p>
                         )}
                         {activity.location && (
                           <p className="activity-detail">Location: {activity.location}</p>
+                        )}
+                        {activity.supplier_name && (
+                          <p className="activity-detail">Supplier: {activity.supplier_name}</p>
+                        )}
+                        {activity.price && (
+                          <p className="activity-detail">Price: {activity.currency || 'USD'} {activity.price.toLocaleString()}</p>
                         )}
                       </div>
                     ))}
