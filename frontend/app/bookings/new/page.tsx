@@ -36,6 +36,57 @@ export default function NewBookingPage() {
     email: '',
   });
 
+  // Validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Validation functions
+  const validateTripDetails = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!tripDetails.title.trim()) {
+      newErrors.title = 'Trip title is required';
+    } else if (tripDetails.title.length < 3) {
+      newErrors.title = 'Trip title must be at least 3 characters';
+    }
+
+    if (!tripDetails.start_date) {
+      newErrors.start_date = 'Start date is required';
+    }
+
+    if (!tripDetails.end_date) {
+      newErrors.end_date = 'End date is required';
+    } else if (tripDetails.start_date && tripDetails.end_date && tripDetails.end_date < tripDetails.start_date) {
+      newErrors.end_date = 'End date must be after start date';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateNewTraveler = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (newTraveler.first_name && newTraveler.first_name.length < 2) {
+      newErrors.first_name = 'First name must be at least 2 characters';
+    }
+
+    if (newTraveler.last_name && newTraveler.last_name.length < 2) {
+      newErrors.last_name = 'Last name must be at least 2 characters';
+    }
+
+    if (newTraveler.phone && !/^[\d\s\-\+\(\)]+$/.test(newTraveler.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
+
+    if (newTraveler.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newTraveler.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    setErrors(prev => ({ ...prev, ...newErrors }));
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Fetch existing travelers
   const { data: travelersData, isLoading: travelersLoading } = useQuery({
     queryKey: ['travelers'],
@@ -124,11 +175,12 @@ export default function NewBookingPage() {
 
   const handleNext = () => {
     if (currentStep === 'details') {
-      if (!tripDetails.title || !tripDetails.start_date || !tripDetails.end_date) {
-        toast.error('Please fill in all required fields');
+      if (!validateTripDetails()) {
+        toast.error('Please fix the validation errors');
         return;
       }
       setCurrentStep('travelers');
+      setErrors({});
     } else if (currentStep === 'travelers') {
       if (selectedTravelers.length === 0) {
         toast.error('Please add at least one traveler');
@@ -207,8 +259,21 @@ export default function NewBookingPage() {
                   type="text"
                   placeholder="e.g., Kenya Safari Adventure"
                   value={tripDetails.title}
-                  onChange={(e) => setTripDetails({ ...tripDetails, title: e.target.value })}
+                  onChange={(e) => {
+                    setTripDetails({ ...tripDetails, title: e.target.value });
+                    if (touched.title && errors.title) {
+                      setErrors(prev => ({ ...prev, title: '' }));
+                    }
+                  }}
+                  onBlur={() => {
+                    setTouched(prev => ({ ...prev, title: true }));
+                    validateTripDetails();
+                  }}
+                  className={touched.title && errors.title ? 'error' : ''}
                 />
+                {touched.title && errors.title && (
+                  <span className="error-message">{errors.title}</span>
+                )}
               </div>
               <div className="form-row">
                 <div className="form-group">
@@ -216,18 +281,44 @@ export default function NewBookingPage() {
                   <input
                     type="date"
                     value={tripDetails.start_date}
-                    onChange={(e) => setTripDetails({ ...tripDetails, start_date: e.target.value })}
+                    onChange={(e) => {
+                      setTripDetails({ ...tripDetails, start_date: e.target.value });
+                      if (touched.start_date && errors.start_date) {
+                        setErrors(prev => ({ ...prev, start_date: '' }));
+                      }
+                    }}
+                    onBlur={() => {
+                      setTouched(prev => ({ ...prev, start_date: true }));
+                      validateTripDetails();
+                    }}
                     min={format(new Date(), 'yyyy-MM-dd')}
+                    className={touched.start_date && errors.start_date ? 'error' : ''}
                   />
+                  {touched.start_date && errors.start_date && (
+                    <span className="error-message">{errors.start_date}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>End Date *</label>
                   <input
                     type="date"
                     value={tripDetails.end_date}
-                    onChange={(e) => setTripDetails({ ...tripDetails, end_date: e.target.value })}
+                    onChange={(e) => {
+                      setTripDetails({ ...tripDetails, end_date: e.target.value });
+                      if (touched.end_date && errors.end_date) {
+                        setErrors(prev => ({ ...prev, end_date: '' }));
+                      }
+                    }}
+                    onBlur={() => {
+                      setTouched(prev => ({ ...prev, end_date: true }));
+                      validateTripDetails();
+                    }}
                     min={tripDetails.start_date}
+                    className={touched.end_date && errors.end_date ? 'error' : ''}
                   />
+                  {touched.end_date && errors.end_date && (
+                    <span className="error-message">{errors.end_date}</span>
+                  )}
                 </div>
               </div>
               <div className="form-group">
@@ -305,16 +396,42 @@ export default function NewBookingPage() {
                     <input
                       type="text"
                       value={newTraveler.first_name}
-                      onChange={(e) => setNewTraveler({ ...newTraveler, first_name: e.target.value })}
+                      onChange={(e) => {
+                        setNewTraveler({ ...newTraveler, first_name: e.target.value });
+                        if (touched.first_name && errors.first_name) {
+                          setErrors(prev => ({ ...prev, first_name: '' }));
+                        }
+                      }}
+                      onBlur={() => {
+                        setTouched(prev => ({ ...prev, first_name: true }));
+                        validateNewTraveler();
+                      }}
+                      className={touched.first_name && errors.first_name ? 'error' : ''}
                     />
+                    {touched.first_name && errors.first_name && (
+                      <span className="error-message">{errors.first_name}</span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Last Name</label>
                     <input
                       type="text"
                       value={newTraveler.last_name}
-                      onChange={(e) => setNewTraveler({ ...newTraveler, last_name: e.target.value })}
+                      onChange={(e) => {
+                        setNewTraveler({ ...newTraveler, last_name: e.target.value });
+                        if (touched.last_name && errors.last_name) {
+                          setErrors(prev => ({ ...prev, last_name: '' }));
+                        }
+                      }}
+                      onBlur={() => {
+                        setTouched(prev => ({ ...prev, last_name: true }));
+                        validateNewTraveler();
+                      }}
+                      className={touched.last_name && errors.last_name ? 'error' : ''}
                     />
+                    {touched.last_name && errors.last_name && (
+                      <span className="error-message">{errors.last_name}</span>
+                    )}
                   </div>
                 </div>
                 <div className="form-row">
@@ -323,16 +440,42 @@ export default function NewBookingPage() {
                     <input
                       type="tel"
                       value={newTraveler.phone}
-                      onChange={(e) => setNewTraveler({ ...newTraveler, phone: e.target.value })}
+                      onChange={(e) => {
+                        setNewTraveler({ ...newTraveler, phone: e.target.value });
+                        if (touched.phone && errors.phone) {
+                          setErrors(prev => ({ ...prev, phone: '' }));
+                        }
+                      }}
+                      onBlur={() => {
+                        setTouched(prev => ({ ...prev, phone: true }));
+                        validateNewTraveler();
+                      }}
+                      className={touched.phone && errors.phone ? 'error' : ''}
                     />
+                    {touched.phone && errors.phone && (
+                      <span className="error-message">{errors.phone}</span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Email</label>
                     <input
                       type="email"
                       value={newTraveler.email}
-                      onChange={(e) => setNewTraveler({ ...newTraveler, email: e.target.value })}
+                      onChange={(e) => {
+                        setNewTraveler({ ...newTraveler, email: e.target.value });
+                        if (touched.email && errors.email) {
+                          setErrors(prev => ({ ...prev, email: '' }));
+                        }
+                      }}
+                      onBlur={() => {
+                        setTouched(prev => ({ ...prev, email: true }));
+                        validateNewTraveler();
+                      }}
+                      className={touched.email && errors.email ? 'error' : ''}
                     />
+                    {touched.email && errors.email && (
+                      <span className="error-message">{errors.email}</span>
+                    )}
                   </div>
                 </div>
                 <button
