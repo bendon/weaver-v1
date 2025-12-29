@@ -19,10 +19,60 @@ function BookingDetailContent() {
   const bookingId = params.id as string;
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get('tab') as Tab) || 'overview');
 
+  // Fetch booking data
   const { data: booking, isLoading } = useQuery({
     queryKey: ['booking', bookingId],
     queryFn: () => api.getBooking(bookingId),
   });
+
+  // Fetch travelers
+  const { data: travelersData, isLoading: travelersLoading } = useQuery({
+    queryKey: ['booking-travelers', bookingId],
+    queryFn: () => api.getBookingTravelers(bookingId),
+    enabled: !!bookingId,
+  });
+
+  // Fetch flights
+  const { data: flightsData, isLoading: flightsLoading } = useQuery({
+    queryKey: ['booking-flights', bookingId],
+    queryFn: () => api.getBookingFlights(bookingId),
+    enabled: !!bookingId,
+  });
+
+  // Fetch hotels
+  const { data: hotelsData, isLoading: hotelsLoading } = useQuery({
+    queryKey: ['booking-hotels', bookingId],
+    queryFn: () => api.getBookingHotels(bookingId),
+    enabled: !!bookingId,
+  });
+
+  // Fetch transfers
+  const { data: transfersData, isLoading: transfersLoading } = useQuery({
+    queryKey: ['booking-transfers', bookingId],
+    queryFn: () => api.getBookingTransfers(bookingId),
+    enabled: !!bookingId,
+  });
+
+  // Fetch activities
+  const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['booking-activities', bookingId],
+    queryFn: () => api.getBookingActivities(bookingId),
+    enabled: !!bookingId,
+  });
+
+  // Fetch messages
+  const { data: messagesData, isLoading: messagesLoading } = useQuery({
+    queryKey: ['booking-messages', bookingId],
+    queryFn: () => api.getBookingMessages(bookingId),
+    enabled: !!bookingId,
+  });
+
+  const travelers = travelersData?.travelers || [];
+  const flights = flightsData?.flights || [];
+  const hotels = hotelsData?.hotels || [];
+  const transfers = transfersData?.transfers || [];
+  const activities = activitiesData?.activities || [];
+  const messages = messagesData?.messages || [];
 
   if (isLoading) {
     return (
@@ -136,7 +186,7 @@ function BookingDetailContent() {
                 </div>
                 <div className="booking-stat-card">
                   <h3>Travelers</h3>
-                  <p className="stat-value">{booking.total_travelers || booking.travelers?.length || 0}</p>
+                  <p className="stat-value">{travelers.length || booking.total_travelers || 0}</p>
                 </div>
                 <div className="booking-stat-card">
                   <h3>Days Until Departure</h3>
@@ -177,45 +227,231 @@ function BookingDetailContent() {
 
           {activeTab === 'travelers' && (
             <div className="booking-travelers">
-              {booking.travelers && booking.travelers.length > 0 ? (
+              {travelersLoading ? (
+                <p>Loading travelers...</p>
+              ) : travelers && travelers.length > 0 ? (
                 <div className="travelers-list">
-                  {booking.travelers.map((traveler: any, idx: number) => (
-                    <div key={idx} className="traveler-card">
+                  {travelers.map((traveler: any, idx: number) => (
+                    <div key={traveler.id || traveler.traveler_id || idx} className="traveler-card">
                       <div className="traveler-avatar">
                         {traveler.first_name?.charAt(0) || 'T'}
                       </div>
                       <div className="traveler-info">
                         <h4>{traveler.first_name} {traveler.last_name}</h4>
-                        <p>{traveler.contact?.phone || traveler.phone || 'No phone'}</p>
-                        <p>{traveler.contact?.email || traveler.email || 'No email'}</p>
+                        {traveler.phone && <p>{traveler.phone}</p>}
+                        {traveler.email && <p>{traveler.email}</p>}
                       </div>
-                      <button onClick={() => router.push(`/travelers/${traveler.id || traveler.traveler_id}`)}>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => router.push(`/travelers/${traveler.id || traveler.traveler_id}`)}
+                      >
                         View Profile
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p>No travelers linked to this booking</p>
+                <div className="empty-state">
+                  <Users size={48} />
+                  <h3>No travelers yet</h3>
+                  <p>Add travelers to this booking</p>
+                </div>
               )}
             </div>
           )}
 
           {activeTab === 'flights' && (
             <div className="booking-flights">
-              <p>Flight information - to be implemented</p>
+              {flightsLoading ? (
+                <p>Loading flights...</p>
+              ) : flights && flights.length > 0 ? (
+                <div className="flights-list">
+                  {flights.map((flight: any, idx: number) => (
+                    <div key={flight.id || flight.flight_id || idx} className="flight-card">
+                      <div className="flight-header">
+                        <h4>
+                          {flight.airline_name || flight.airline || 'Airline'} {flight.flight_number || ''}
+                        </h4>
+                        <span className={`status-badge status-${flight.status || 'confirmed'}`}>
+                          {flight.status || 'confirmed'}
+                        </span>
+                      </div>
+                      <div className="flight-route">
+                        <div className="flight-airport">
+                          <div className="airport-code">{flight.origin || flight.departure_airport || 'N/A'}</div>
+                          <div className="airport-time">
+                            {flight.departure_time
+                              ? format(new Date(flight.departure_time), 'MMM d, HH:mm')
+                              : 'TBD'
+                            }
+                          </div>
+                        </div>
+                        <div className="flight-arrow">
+                          <Plane size={20} />
+                        </div>
+                        <div className="flight-airport">
+                          <div className="airport-code">{flight.destination || flight.arrival_airport || 'N/A'}</div>
+                          <div className="airport-time">
+                            {flight.arrival_time
+                              ? format(new Date(flight.arrival_time), 'MMM d, HH:mm')
+                              : 'TBD'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      {flight.booking_reference && (
+                        <div className="flight-pnr">
+                          <strong>PNR:</strong> <code>{flight.booking_reference}</code>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <Plane size={48} />
+                  <h3>No flights yet</h3>
+                  <p>Add flights to this booking</p>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'messages' && (
             <div className="booking-messages">
-              <p>Message history - to be implemented</p>
+              {messagesLoading ? (
+                <p>Loading messages...</p>
+              ) : messages && messages.length > 0 ? (
+                <div className="messages-list">
+                  {messages.map((message: any, idx: number) => (
+                    <div key={message.id || message.message_id || idx} className="message-card">
+                      <div className="message-header">
+                        <div className="message-sender">
+                          <strong>{message.sender_name || message.sender || 'Unknown'}</strong>
+                          {message.sender_type && (
+                            <span className="sender-type">({message.sender_type})</span>
+                          )}
+                        </div>
+                        <div className="message-date">
+                          {message.sent_at || message.created_at
+                            ? format(new Date(message.sent_at || message.created_at), 'MMM d, yyyy HH:mm')
+                            : 'Unknown date'
+                          }
+                        </div>
+                      </div>
+                      <div className="message-content">
+                        {message.content || message.message || 'No content'}
+                      </div>
+                      {message.status && (
+                        <div className="message-status">
+                          <span className={`status-badge status-${message.status}`}>
+                            {message.status}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <MessageSquare size={48} />
+                  <h3>No messages yet</h3>
+                  <p>Start a conversation with your travelers</p>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'activity' && (
             <div className="booking-activity">
-              <p>Activity log - to be implemented</p>
+              {/* Hotels Section */}
+              <div className="activity-section">
+                <h3>Hotels</h3>
+                {hotelsLoading ? (
+                  <p>Loading hotels...</p>
+                ) : hotels && hotels.length > 0 ? (
+                  <div className="hotels-list">
+                    {hotels.map((hotel: any, idx: number) => (
+                      <div key={hotel.id || hotel.hotel_id || idx} className="activity-card">
+                        <h4>{hotel.name || hotel.hotel_name || 'Hotel'}</h4>
+                        <p>{hotel.address || hotel.location || 'Location not specified'}</p>
+                        {hotel.check_in_date && hotel.check_out_date && (
+                          <p className="activity-dates">
+                            {format(new Date(hotel.check_in_date), 'MMM d')} - {format(new Date(hotel.check_out_date), 'MMM d, yyyy')}
+                          </p>
+                        )}
+                        {hotel.confirmation_number && (
+                          <p className="activity-conf">
+                            <strong>Confirmation:</strong> <code>{hotel.confirmation_number}</code>
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="activity-empty">No hotels added</p>
+                )}
+              </div>
+
+              {/* Transfers Section */}
+              <div className="activity-section">
+                <h3>Transfers</h3>
+                {transfersLoading ? (
+                  <p>Loading transfers...</p>
+                ) : transfers && transfers.length > 0 ? (
+                  <div className="transfers-list">
+                    {transfers.map((transfer: any, idx: number) => (
+                      <div key={transfer.id || transfer.transfer_id || idx} className="activity-card">
+                        <h4>{transfer.type || 'Transfer'}</h4>
+                        <p>
+                          {transfer.pickup_location || 'Pickup'} → {transfer.dropoff_location || 'Dropoff'}
+                        </p>
+                        {transfer.pickup_time && (
+                          <p className="activity-dates">
+                            {format(new Date(transfer.pickup_time), 'MMM d, yyyy HH:mm')}
+                          </p>
+                        )}
+                        {transfer.vehicle_type && (
+                          <p className="activity-detail">Vehicle: {transfer.vehicle_type}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="activity-empty">No transfers added</p>
+                )}
+              </div>
+
+              {/* Activities Section */}
+              <div className="activity-section">
+                <h3>Activities & Excursions</h3>
+                {activitiesLoading ? (
+                  <p>Loading activities...</p>
+                ) : activities && activities.length > 0 ? (
+                  <div className="activities-list">
+                    {activities.map((activity: any, idx: number) => (
+                      <div key={activity.id || activity.activity_id || idx} className="activity-card">
+                        <h4>{activity.name || activity.title || 'Activity'}</h4>
+                        <p>{activity.description || 'No description'}</p>
+                        {activity.date && (
+                          <p className="activity-dates">
+                            {format(new Date(activity.date), 'MMM d, yyyy')}
+                            {activity.time && ` at ${activity.time}`}
+                          </p>
+                        )}
+                        {activity.duration && (
+                          <p className="activity-detail">Duration: {activity.duration}</p>
+                        )}
+                        {activity.location && (
+                          <p className="activity-detail">Location: {activity.location}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="activity-empty">No activities added</p>
+                )}
+              </div>
             </div>
           )}
         </div>
