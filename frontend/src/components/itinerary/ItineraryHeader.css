@@ -1,0 +1,48 @@
+.itinerary-header {
+  background: var(--primary-color, var(--color-primary));
+  color: white;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.itinerary-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.itinerary-ref {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.itinerary-dates {
+  font-size: 18px;
+  margin-top: var(--spacing-md);
+  font-weight: 500;
+}
+
+.duration {
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.travelers {
+  margin-top: var(--spacing-md);
+  font-size: 16px;
+  opacity: 0.95;
+}
+
+@media (min-width: 768px) {
+  .itinerary-title {
+    font-size: 32px;
+  }
+}
+

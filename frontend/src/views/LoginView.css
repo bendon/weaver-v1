@@ -1,0 +1,185 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  padding: 16px;
+}
+
+@media (min-width: 576px) {
+  .login-container {
+    padding: 20px;
+  }
+}
+
+.login-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 576px) {
+  .login-card {
+    max-width: 450px;
+    padding: 32px;
+  }
+}
+
+@media (min-width: 768px) {
+  .login-card {
+    max-width: 500px;
+    padding: 48px;
+  }
+}
+
+@media (min-width: 992px) {
+  .login-card {
+    max-width: 550px;
+  }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  color: #000000;
+  margin-bottom: 16px;
+}
+
+.login-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 8px 0;
+}
+
+@media (min-width: 576px) {
+  .login-header h1 {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 768px) {
+  .login-header h1 {
+    font-size: 32px;
+  }
+}
+
+.login-header p {
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 14px;
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.form-group input {
+  padding: 12px 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s;
+  background: #ffffff;
+  color: #000000;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.login-button {
+  margin-top: 8px;
+  padding: 14px;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  min-height: 44px;
+  width: 100%;
+}
+
+.login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+.login-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #000000;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.link-button:hover {
+  opacity: 0.7;
+}
+
+.error-message {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 4px solid #000000;
+}
+
+/* ==================== ADDITIONAL MOBILE OPTIMIZATIONS ==================== */
+
+/* Ensure inputs don't zoom on iOS */
+.form-group input {
+  font-size: 16px; /* Prevents zoom on iOS */
+}

@@ -1,0 +1,66 @@
+/* ==================== BUTTON STANDARDS ====================
+   Standardized button system for consistent black button usage
+   ============================================================ */
+
+/* Primary Actions - Always Black */
+.button-primary-action {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.button-primary-action:hover {
+  background: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary-action:active {
+  background: #111827;
+  transform: translateY(1px);
+}
+
+/* Secondary Actions - White with Border */
+.button-secondary-action {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #e5e7eb;
+}
+
+.button-secondary-action:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Tertiary Actions - Ghost/Transparent */
+.button-tertiary-action {
+  background: transparent;
+  color: #475569;
+}
+
+.button-tertiary-action:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Active Filter/Tab - Black Background */
+.button-filter.active,
+.button-tab.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.button-filter.active:hover,
+.button-tab.active:hover {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+
+/* Standardization Rules:
+   1. Primary actions (Create, Save, Submit) → Black (#000000)
+   2. Secondary actions (Cancel, Back) → White with border
+   3. Tertiary actions (View, Edit) → Ghost/transparent
+   4. Active filters/tabs → Black background
+   5. Icon buttons → Ghost variant
+*/
+

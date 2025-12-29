@@ -1,0 +1,161 @@
+/* ==================== BUTTON COMPONENT ==================== */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: all 200ms;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Button Variants */
+.button-default {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.button-default:hover {
+  background: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.button-default:active {
+  background: #111827;
+  transform: translateY(1px);
+}
+
+.button-outline {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #e5e7eb;
+}
+
+.button-outline:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.button-outline:active {
+  background: #f3f4f6;
+}
+
+.button-ghost {
+  background: transparent;
+  color: #475569;
+}
+
+.button-ghost:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.button-ghost:active {
+  background: #e2e8f0;
+}
+
+/* Button Sizes */
+.button-default-size {
+  height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+}
+
+.button-sm {
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.button-lg {
+  height: 2.75rem;
+  padding: 0 1.5rem;
+  font-size: 0.875rem;
+}
+
+.button-icon {
+  height: 2.5rem;
+  width: 2.5rem;
+  padding: 0;
+  border-radius: 0.75rem;
+}
+
+/* Special Button Styles */
+.button-primary {
+  background: linear-gradient(to right, #0f172a, #334155);
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary:hover {
+  background: linear-gradient(to right, #1e293b, #475569);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.button-secondary {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.button-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.button-secondary:active {
+  background: #f1f5f9;
+}
+
+/* Active State (for filters, tabs, etc.) */
+.button-outline.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.button-outline.active:hover {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+
+/* Disabled State */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Focus State */
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.button-outline:focus {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.button-ghost:focus {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Full Width */
+.button-full {
+  width: 100%;
+}
+

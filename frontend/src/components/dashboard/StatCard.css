@@ -1,0 +1,166 @@
+/* ==================== STAT CARD COMPONENT ==================== */
+
+.stat-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 300ms;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(248, 250, 252, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card-content {
+  position: relative;
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: 1;
+}
+
+.stat-card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.stat-card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  line-height: 1;
+}
+
+.stat-card-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  background: linear-gradient(to bottom right, #0f172a, #334155);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.stat-card-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  min-height: 1.75rem; /* Reserve space even when no trend */
+}
+
+.stat-card-trend-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid;
+}
+
+.stat-card-trend-badge.positive {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.stat-card-trend-badge.negative {
+  background: #fff1f2;
+  color: #be123c;
+  border-color: #fecdd3;
+}
+
+.stat-card-trend-arrow {
+  font-size: 0.75rem;
+}
+
+.stat-card-trend-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stat-card-icon-wrapper {
+  margin-left: 1rem;
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(to bottom right, #f1f5f9, #f8fafc);
+  padding: 1rem;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 300ms;
+}
+
+.stat-card:hover .stat-card-icon-wrapper {
+  transform: scale(1.1);
+}
+
+.stat-card-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #334155;
+}
+
+.stat-card-accent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0.25rem;
+  background: linear-gradient(to right, #0f172a, #334155, #0f172a);
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+.stat-card:hover .stat-card-accent {
+  opacity: 1;
+}
+
+/* Empty trend spacer - ensures consistent height */
+.stat-card-trend-empty {
+  min-height: 1.75rem;
+  visibility: hidden;
+}
+

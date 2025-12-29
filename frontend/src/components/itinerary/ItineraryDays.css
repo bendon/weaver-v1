@@ -1,0 +1,12 @@
+.itinerary-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.itinerary-days-empty {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-secondary);
+}
+
