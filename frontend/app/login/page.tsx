@@ -34,10 +34,13 @@ function LoginPageContent() {
     try {
       if (isLogin) {
         await login(email, password);
-        router.push('/dmc');
+        // Redirect to dashboard or the redirect parameter if provided
+        const redirect = searchParams.get('redirect') || '/';
+        router.push(redirect);
       } else {
         await register(email, password, name, organizationName);
-        router.push('/dmc');
+        // Redirect to dashboard after registration
+        router.push('/');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');

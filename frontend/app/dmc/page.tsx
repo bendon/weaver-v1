@@ -1,14 +1,19 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-
-const DMCView = dynamic(() => import('@/views/DMCView'), { ssr: false });
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function DMCPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to dashboard since DMCView is discontinued
+    router.replace('/');
+  }, [router]);
+
   return (
-    <DashboardLayout title="DMC Dashboard">
-      <DMCView />
-    </DashboardLayout>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div>Redirecting to dashboard...</div>
+    </div>
   );
 }
