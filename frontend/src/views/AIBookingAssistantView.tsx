@@ -99,7 +99,7 @@ export default function AIBookingAssistantView({ conversationId: propConversatio
                     <div className="conversation-header">
                       <Bot size={16} />
                       <span className="conversation-title">
-                        {conv.booking_id ? `Booking: ${conv.booking_id.slice(0, 8)}...` : 'New Conversation'}
+                        {conv.title || (conv.booking_id ? `Booking: ${conv.booking_id.slice(0, 8)}...` : 'New Conversation')}
                       </span>
                     </div>
                     <div className="conversation-meta">

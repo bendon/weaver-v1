@@ -136,6 +136,46 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
     }
   };
 
+  const handleStarterPrompt = (prompt: string) => {
+    setInput(prompt);
+    inputRef.current?.focus();
+  };
+
+  const starterPrompts = [
+    {
+      icon: '✈️',
+      title: 'Book a Flight',
+      prompt: 'I need to book a flight from New York to London in March for 2 people'
+    },
+    {
+      icon: '🏨',
+      title: 'Plan a Trip',
+      prompt: 'Plan a 5-day vacation to Tokyo in April for 2 travelers'
+    },
+    {
+      icon: '🎯',
+      title: 'Safari Adventure',
+      prompt: 'Create a Kenya safari booking for 4 people in June'
+    },
+    {
+      icon: '🌴',
+      title: 'Beach Getaway',
+      prompt: 'I want to book a beach resort in Maldives for 2 weeks in July'
+    },
+    {
+      icon: '🎿',
+      title: 'Mountain Retreat',
+      prompt: 'Plan a ski trip to the Alps for 3 people in February'
+    },
+    {
+      icon: '🗼',
+      title: 'City Break',
+      prompt: 'Book a weekend city break to Paris for 2 people next month'
+    }
+  ];
+
+  const showStarterPrompts = messages.length === 1 && messages[0].id === 'welcome';
+
   const renderToolCall = (toolCall: { name: string; arguments: any; result?: any }) => {
     const icons: Record<string, React.ReactNode> = {
       search_flights: <Plane size={16} />,
@@ -203,6 +243,28 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
             </div>
           </div>
         ))}
+
+        {showStarterPrompts && (
+          <div className="starter-prompts-container">
+            <div className="starter-prompts-header">
+              <h4>✨ Try one of these to get started:</h4>
+            </div>
+            <div className="starter-prompts-grid">
+              {starterPrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  className="starter-prompt-card"
+                  onClick={() => handleStarterPrompt(prompt.prompt)}
+                  type="button"
+                >
+                  <div className="starter-prompt-icon">{prompt.icon}</div>
+                  <div className="starter-prompt-title">{prompt.title}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {sendMessageMutation.isPending && (
           <div className="message message-assistant">
             <div className="message-avatar">

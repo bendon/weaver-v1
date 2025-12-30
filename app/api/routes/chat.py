@@ -18,6 +18,55 @@ _assistant = None
 _assistant_error = None
 _BookingAssistant = None
 
+
+def generate_conversation_title(message: str, booking_id: Optional[str] = None) -> str:
+    """Generate a concise title from the first user message"""
+    # If there's a booking_id, get booking details for better title
+    if booking_id:
+        from app.core.database import get_booking_by_id
+        booking = get_booking_by_id(booking_id)
+        if booking:
+            return booking.get('title', 'Travel Booking')
+
+    # Extract key information from message
+    message_lower = message.lower()
+
+    # Common patterns
+    if 'tokyo' in message_lower or 'japan' in message_lower:
+        return '🗾 Tokyo Trip Planning'
+    elif 'paris' in message_lower or 'france' in message_lower:
+        return '🗼 Paris Trip Planning'
+    elif 'london' in message_lower or 'uk' in message_lower or 'england' in message_lower:
+        return '🇬🇧 London Trip Planning'
+    elif 'safari' in message_lower or 'kenya' in message_lower:
+        return '🦁 Safari Adventure'
+    elif 'maldives' in message_lower or 'beach' in message_lower or 'resort' in message_lower:
+        return '🏖️ Beach Getaway'
+    elif 'ski' in message_lower or 'alps' in message_lower or 'mountain' in message_lower:
+        return '🎿 Mountain Retreat'
+    elif 'new york' in message_lower or 'nyc' in message_lower:
+        return '🗽 New York Trip'
+    elif 'dubai' in message_lower:
+        return '🏙️ Dubai Adventure'
+
+    # Generic patterns
+    elif 'flight' in message_lower:
+        return '✈️ Flight Booking'
+    elif 'hotel' in message_lower:
+        return '🏨 Hotel Reservation'
+    elif 'trip' in message_lower or 'vacation' in message_lower or 'travel' in message_lower:
+        # Extract first few words
+        words = message.split()[:5]
+        truncated = ' '.join(words)
+        if len(message.split()) > 5:
+            truncated += '...'
+        return f'✈️ {truncated.capitalize()}'
+
+    # Default: use first 40 characters
+    if len(message) > 40:
+        return message[:37] + '...'
+    return message
+
 def get_assistant():
     """Get or initialize the AI assistant (lazy initialization)"""
     global _assistant, _assistant_error, _BookingAssistant
@@ -131,6 +180,12 @@ async def send_message(
             content=request.message
         )
 
+        # Generate and save conversation title from first user message
+        if len(messages) == 0 or (len(messages) == 1 and messages[0]['role'] == 'system'):
+            # This is the first user message, generate a title
+            title = generate_conversation_title(request.message)
+            update_conversation(conversation_id, title=title)
+
         # Save assistant response to database
         assistant_message_id = add_conversation_message(
             conversation_id=conversation_id,
@@ -139,11 +194,13 @@ async def send_message(
             tool_calls=result.get('tool_calls')
         )
 
-        # Check if a booking was created and link it
+        # Check if a booking was created and link it (and update title if needed)
         for tool_call in result.get('tool_calls', []):
             if tool_call['name'] == 'create_booking' and tool_call['result'].get('success'):
                 booking_id = tool_call['result']['booking_id']
-                update_conversation(conversation_id, booking_id=booking_id)
+                # Update title with booking title if available
+                title = generate_conversation_title(request.message, booking_id)
+                update_conversation(conversation_id, booking_id=booking_id, title=title)
 
         return {
             "conversation_id": conversation_id,

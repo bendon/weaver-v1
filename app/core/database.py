@@ -392,11 +392,19 @@ def init_database():
             user_id TEXT REFERENCES users(id),
             booking_id TEXT REFERENCES bookings(id),
             conversation_type TEXT DEFAULT 'booking',
+            title TEXT DEFAULT 'New Conversation',
             status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'abandoned')),
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
+
+    # Add title column if it doesn't exist (migration for existing databases)
+    try:
+        cursor.execute("ALTER TABLE conversations ADD COLUMN title TEXT DEFAULT 'New Conversation'")
+    except sqlite3.OperationalError:
+        # Column already exists, ignore
+        pass
     
     # ============================================================
     # AI CONVERSATION MESSAGES
