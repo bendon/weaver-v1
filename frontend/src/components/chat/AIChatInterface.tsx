@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import { Send, Bot, User, Loader2, Plane, Hotel, Calendar, Users, X } from 'lucide-react';
+import { Send, Bot, User, Loader2, Plane, Hotel, Calendar, Users, X, MapPin, Mountain, Building2, Palmtree } from 'lucide-react';
 import './AIChatInterface.css';
 
 interface Message {
@@ -202,7 +202,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
           setMessages([{
             id: 'welcome',
             role: 'assistant',
-            content: '👋 Continuing our conversation. How can I help you with your booking?',
+            content: 'Welcome back. How can I assist you with your booking today?',
             timestamp: new Date(),
           }]);
         } catch (error) {
@@ -239,7 +239,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
           setMessages([{
             id: 'welcome',
             role: 'assistant',
-            content: '👋 Hi! I\'m your AI booking assistant. I can help you create travel bookings through natural conversation.\n\nTell me about the trip you\'d like to create - destination, dates, travelers, and any preferences!',
+            content: 'Welcome to the AI Booking Assistant. I can help you create and manage travel bookings efficiently.\n\nPlease provide details about your trip including destination, dates, number of travelers, and any specific requirements.',
             timestamp: new Date(),
           }]);
         }
@@ -396,7 +396,6 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
   ];
 
   const showStarterPrompts = messages.length === 1 && messages[0].id === 'welcome';
-
   const renderToolCall = (toolCall: { name: string; arguments: any; result?: any }) => {
     const icons: Record<string, React.ReactNode> = {
       search_flights: <Plane size={16} />,
@@ -503,11 +502,12 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
             <div className="message-content">
               <div className="message-text">
                 <Loader2 size={16} className="animate-spin" />
-                <span style={{ marginLeft: '8px' }}>Thinking...</span>
+                <span style={{ marginLeft: '8px' }}>Processing...</span>
               </div>
             </div>
           </div>
         )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -517,7 +517,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message... (e.g., 'I need to create a Kenya safari for 2 people, mid-March')"
+          placeholder="Type your booking request... (e.g., 'Book a safari to Kenya for 2 travelers, departing March 15')"
           className="chat-input"
           rows={1}
           disabled={sendMessageMutation.isPending}
