@@ -1178,15 +1178,46 @@ export const api = {
       result?: any;
     }>;
   }> {
-    const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ 
-        message,
-        conversation_id: conversation_id || null 
-      }),
+    const url = `${API_BASE_URL}/api/chat/message`;
+    const payload = { 
+      message,
+      conversation_id: conversation_id || null 
+    };
+    
+    console.log('sendChatMessage - Making request:', {
+      url,
+      API_BASE_URL,
+      payload,
+      hasAuthToken: !!getAuthToken()
     });
-    return handleApiResponse(response);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: createHeaders(),
+        body: JSON.stringify(payload),
+      });
+      
+      console.log('sendChatMessage - Response status:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('sendChatMessage - Error response:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        } catch (e) {
+          throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+      
+      const data = await response.json();
+      console.log('sendChatMessage - Success:', data);
+      return data;
+    } catch (error: any) {
+      console.error('sendChatMessage - Exception:', error);
+      throw error;
+    }
   },
 
   /**

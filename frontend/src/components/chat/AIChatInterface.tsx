@@ -175,28 +175,33 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initializedRef = useRef<boolean>(false);
+  const initializingRef = useRef<boolean>(false);
+  const lastPropConversationIdRef = useRef<string | null | undefined>(propConversationId);
 
   // Initialize conversation or load existing
   useEffect(() => {
-    // Skip if already initialized for this propConversationId
-    if (initializedRef.current && conversationId) {
-      // If propConversationId changed, we need to re-initialize
-      if (propConversationId && conversationId === propConversationId) {
-        return;
-      }
-      // If no propConversationId and we have a conversationId, don't re-initialize
-      if (!propConversationId) {
-        return;
-      }
+    // Skip if already initialized and propConversationId hasn't changed
+    if (initializedRef.current && propConversationId === lastPropConversationIdRef.current) {
+      return;
     }
 
+    // Skip if initialization is already in progress
+    if (initializingRef.current) {
+      return;
+    }
+
+    // Mark initialization as in progress
+    initializingRef.current = true;
+    lastPropConversationIdRef.current = propConversationId;
+
     const initConversation = async () => {
-      // If conversationId is provided as prop, load it
-      if (propConversationId) {
-        try {
+      try {
+        // If conversationId is provided as prop, load it
+        if (propConversationId) {
           const conv = await api.getConversation(propConversationId);
           setConversationId(propConversationId);
           initializedRef.current = true;
+          initializingRef.current = false;
           // Load conversation messages if available
           // For now, just show welcome message
           setMessages([{
@@ -205,46 +210,62 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
             content: 'Welcome back. How can I assist you with your booking today?',
             timestamp: new Date(),
           }]);
-        } catch (error) {
-          console.error('Error loading conversation:', error);
+          return;
         }
-        return;
-      }
 
-      // No propConversationId provided - check for existing active conversation first
-      try {
+        // No propConversationId provided - check for existing active conversation first
         const conversationsData = await api.getConversations();
         const conversations = conversationsData?.conversations || [];
         
-        // Find the most recent active/in-progress conversation
-        const activeConversation = conversations.find(
-          (conv: any) => conv.status === 'active' || conv.status === 'lead' || conv.status === 'in_progress'
-        );
+        // Filter and sort: get active conversations, sorted by updated_at descending
+        const activeConversations = conversations
+          .filter((conv: any) => 
+            conv.status === 'active' || 
+            conv.status === 'lead' || 
+            conv.stage === 'lead' || 
+            conv.stage === 'qualified' || 
+            conv.stage === 'booking_in_progress'
+          )
+          .sort((a: any, b: any) => {
+            // Sort by updated_at descending (most recent first)
+            const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
+            const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
+            return dateB - dateA;
+          });
         
-        if (activeConversation) {
-          // Use existing active conversation
+        if (activeConversations.length > 0) {
+          // Use the most recent active conversation
+          const activeConversation = activeConversations[0];
           setConversationId(activeConversation.id);
           initializedRef.current = true;
+          initializingRef.current = false;
           setMessages([{
             id: 'welcome',
             role: 'assistant',
             content: '👋 Continuing our conversation. How can I help you with your booking?',
             timestamp: new Date(),
           }]);
-        } else if (!initializedRef.current) {
-          // No active conversation found and not yet initialized, create a new one
-          const response = await api.createConversation('Start new conversation');
-          setConversationId(response.conversation_id);
-          initializedRef.current = true;
-          setMessages([{
-            id: 'welcome',
-            role: 'assistant',
-            content: 'Welcome to the AI Booking Assistant. I can help you create and manage travel bookings efficiently.\n\nPlease provide details about your trip including destination, dates, number of travelers, and any specific requirements.',
-            timestamp: new Date(),
-          }]);
+        } else {
+          // No active conversation found, create a new one
+          // Double-check we haven't already initialized (race condition protection)
+          if (!initializedRef.current) {
+            const response = await api.createConversation('Start new conversation');
+            setConversationId(response.conversation_id);
+            initializedRef.current = true;
+            initializingRef.current = false;
+            setMessages([{
+              id: 'welcome',
+              role: 'assistant',
+              content: 'Welcome to the AI Booking Assistant. I can help you create and manage travel bookings efficiently.\n\nPlease provide details about your trip including destination, dates, number of travelers, and any specific requirements.',
+              timestamp: new Date(),
+            }]);
+          } else {
+            initializingRef.current = false;
+          }
         }
       } catch (error) {
         console.error('Error initializing conversation:', error);
+        initializingRef.current = false;
         if (!initializedRef.current) {
           setMessages([{
             id: 'error',
@@ -255,7 +276,16 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
         }
       }
     };
+    
     initConversation();
+
+    // Cleanup function to reset initialization flag if propConversationId changes
+    return () => {
+      // Only reset if propConversationId actually changed (not just on unmount)
+      if (propConversationId !== lastPropConversationIdRef.current) {
+        initializedRef.current = false;
+      }
+    };
   }, [propConversationId]);
 
   // Auto-scroll to bottom
@@ -265,11 +295,22 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      return await api.sendChatMessage(conversationId, message);
+      console.log('Sending message to API:', { conversationId, message });
+      try {
+        const response = await api.sendChatMessage(conversationId, message);
+        console.log('API response received:', response);
+        return response;
+      } catch (error: any) {
+        console.error('Error sending message to API:', error);
+        throw error;
+      }
     },
     onSuccess: (response) => {
+      console.log('Message sent successfully:', response);
+      
       // Update conversation ID from response (important: maintains conversation session)
       if (response.conversation_id && response.conversation_id !== conversationId) {
+        console.log('Updating conversation ID:', response.conversation_id);
         setConversationId(response.conversation_id);
       }
 
@@ -304,10 +345,11 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
       }
     },
     onError: (error: Error) => {
+      console.error('Error in sendMessageMutation:', error);
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'system',
-        content: `Error: ${error.message}`,
+        content: `Error: ${error.message || 'Failed to send message. Please try again.'}`,
         timestamp: new Date(),
       }]);
     },
@@ -315,7 +357,18 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || sendMessageMutation.isPending) return;
+    if (!input.trim() || sendMessageMutation.isPending) {
+      console.log('Cannot send message:', { input: input.trim(), isPending: sendMessageMutation.isPending });
+      return;
+    }
+    
+    // Even if conversationId is null, the API will create a new conversation
+    // But let's log it for debugging
+    if (!conversationId) {
+      console.log('Sending message without conversationId - API will create new conversation');
+    }
+    
+    console.log('Calling sendMessageMutation.mutate');
     sendMessageMutation.mutate(input);
   };
 
