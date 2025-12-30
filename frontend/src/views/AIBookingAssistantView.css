@@ -29,6 +29,11 @@
   gap: 12px;
 }
 
+.sidebar-logo svg {
+  color: #000000;
+  stroke: #000000;
+}
+
 .sidebar-logo h2 {
   font-size: 18px;
   font-weight: 700;
@@ -48,7 +53,7 @@
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: white;
-  color: #64748b;
+  color: #000000;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -56,19 +61,27 @@
   transition: all 0.2s;
 }
 
+.sidebar-back-btn svg {
+  color: #000000;
+  stroke: #000000;
+}
+
 .sidebar-back-btn:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
-  color: #1e293b;
+  color: #000000;
 }
 
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: visible;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .new-conversation-btn {
@@ -88,6 +101,11 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.new-conversation-btn svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
 .new-conversation-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3);
@@ -97,6 +115,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .section-title {
@@ -112,6 +132,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .empty-conversations {
@@ -143,6 +166,8 @@
   cursor: pointer;
   text-align: left;
   transition: all 0.2s;
+  position: relative;
+  z-index: 1;
 }
 
 .conversation-item:hover {
@@ -161,6 +186,11 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+}
+
+.conversation-header svg {
+  color: #000000;
+  stroke: #000000;
 }
 
 .conversation-title {
@@ -185,14 +215,18 @@
 
 .status-icon {
   flex-shrink: 0;
+  color: #000000;
+  stroke: #000000;
 }
 
 .status-icon.completed {
-  color: #10b981;
+  color: #000000;
+  stroke: #000000;
 }
 
 .status-icon.active {
-  color: #3b82f6;
+  color: #000000;
+  stroke: #000000;
 }
 
 .conversation-date {
@@ -253,6 +287,8 @@
   flex-direction: column;
   overflow: hidden;
   background: #f8fafc;
+  position: relative;
+  z-index: 0;
 }
 
 .chat-container {
@@ -261,6 +297,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .chat-container .ai-chat-interface {

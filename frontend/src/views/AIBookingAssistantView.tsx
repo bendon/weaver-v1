@@ -101,7 +101,7 @@ export default function AIBookingAssistantView() {
                         {conv.status}
                       </span>
                       <span className="conversation-date">
-                        {new Date(conv.created_at).toLocaleDateString()}
+                        {new Date(conv.created_at).toLocaleDateString()} {new Date(conv.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </button>
