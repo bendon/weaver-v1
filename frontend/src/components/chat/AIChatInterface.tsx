@@ -174,15 +174,29 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
   const [showStarterForm, setShowStarterForm] = useState<StarterFormData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const initializedRef = useRef<boolean>(false);
 
   // Initialize conversation or load existing
   useEffect(() => {
+    // Skip if already initialized for this propConversationId
+    if (initializedRef.current && conversationId) {
+      // If propConversationId changed, we need to re-initialize
+      if (propConversationId && conversationId === propConversationId) {
+        return;
+      }
+      // If no propConversationId and we have a conversationId, don't re-initialize
+      if (!propConversationId) {
+        return;
+      }
+    }
+
     const initConversation = async () => {
-      // If conversationId is provided, load it
+      // If conversationId is provided as prop, load it
       if (propConversationId) {
         try {
           const conv = await api.getConversation(propConversationId);
           setConversationId(propConversationId);
+          initializedRef.current = true;
           // Load conversation messages if available
           // For now, just show welcome message
           setMessages([{
@@ -194,19 +208,44 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
         } catch (error) {
           console.error('Error loading conversation:', error);
         }
-      } else if (!conversationId) {
-        // Create new conversation
-        try {
+        return;
+      }
+
+      // No propConversationId provided - check for existing active conversation first
+      try {
+        const conversationsData = await api.getConversations();
+        const conversations = conversationsData?.conversations || [];
+        
+        // Find the most recent active/in-progress conversation
+        const activeConversation = conversations.find(
+          (conv: any) => conv.status === 'active' || conv.status === 'lead' || conv.status === 'in_progress'
+        );
+        
+        if (activeConversation) {
+          // Use existing active conversation
+          setConversationId(activeConversation.id);
+          initializedRef.current = true;
+          setMessages([{
+            id: 'welcome',
+            role: 'assistant',
+            content: '👋 Continuing our conversation. How can I help you with your booking?',
+            timestamp: new Date(),
+          }]);
+        } else if (!initializedRef.current) {
+          // No active conversation found and not yet initialized, create a new one
           const response = await api.createConversation('Start new conversation');
           setConversationId(response.conversation_id);
+          initializedRef.current = true;
           setMessages([{
             id: 'welcome',
             role: 'assistant',
             content: '👋 Hi! I\'m your AI booking assistant. I can help you create travel bookings through natural conversation.\n\nTell me about the trip you\'d like to create - destination, dates, travelers, and any preferences!',
             timestamp: new Date(),
           }]);
-        } catch (error) {
-          console.error('Error creating conversation:', error);
+        }
+      } catch (error) {
+        console.error('Error initializing conversation:', error);
+        if (!initializedRef.current) {
           setMessages([{
             id: 'error',
             role: 'system',
@@ -229,6 +268,11 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
       return await api.sendChatMessage(conversationId, message);
     },
     onSuccess: (response) => {
+      // Update conversation ID from response (important: maintains conversation session)
+      if (response.conversation_id && response.conversation_id !== conversationId) {
+        setConversationId(response.conversation_id);
+      }
+
       // Add user message
       setMessages(prev => [...prev, {
         id: `user-${Date.now()}`,

@@ -432,10 +432,19 @@ def init_database():
             content TEXT NOT NULL,
             tool_calls TEXT,
             tool_results TEXT,
+            tool_call_id TEXT,
             tokens_used INTEGER,
             created_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    
+    # Add tool_call_id column if it doesn't exist (migration for existing databases)
+    try:
+        cursor.execute("SELECT tool_call_id FROM conversation_messages LIMIT 1")
+    except sqlite3.OperationalError:
+        # Column doesn't exist, add it
+        cursor.execute("ALTER TABLE conversation_messages ADD COLUMN tool_call_id TEXT")
+        print("Added tool_call_id column to conversation_messages table")
     
     # ============================================================
     # REFERENCE DATA CACHE

@@ -152,6 +152,13 @@ async def send_message(
         # Verify user has access to this conversation
         if conversation['organization_id'] != current_user['organization_id']:
             raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Prevent adding messages to completed or abandoned conversations
+        if conversation.get('status') in ['completed', 'abandoned']:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Cannot add messages to a {conversation.get('status')} conversation. Please start a new conversation."
+            )
 
         # Get conversation history
         messages = get_conversation_messages(conversation_id)
@@ -195,20 +202,33 @@ async def send_message(
         )
 
         # Check if a booking was created and link it (and update title + stage)
+        # Also mark conversation as active when booking process starts
+        booking_created = False
         for tool_call in result.get('tool_calls', []):
             if tool_call['name'] == 'create_booking' and tool_call['result'].get('success'):
                 booking_id = tool_call['result']['booking_id']
                 # Update title with booking title if available
                 title = generate_conversation_title(request.message, booking_id)
-                # Update stage to booking_in_progress
-                update_conversation(conversation_id, booking_id=booking_id, title=title, stage='booking_in_progress')
+                # Update stage to booking_in_progress and status to active
+                update_conversation(conversation_id, booking_id=booking_id, title=title, stage='booking_in_progress', status='active')
+                booking_created = True
 
             # If flight or hotel was added, also update stage
             elif tool_call['name'] in ['add_flight_to_booking', 'add_hotel_to_booking'] and tool_call['result'].get('success'):
                 # Get current conversation to check stage
                 conv = get_conversation(conversation_id)
                 if conv and conv.get('stage') == 'lead':
-                    update_conversation(conversation_id, stage='qualified')
+                    update_conversation(conversation_id, stage='qualified', status='active')
+        
+        # Mark conversation as active if any booking-related tool was called (search_flights, add_traveler, etc.)
+        if not booking_created and len(result.get('tool_calls', [])) > 0:
+            # Check if any tool indicates booking process has started
+            booking_tools = ['search_flights', 'search_hotels', 'add_traveler', 'add_flight_to_booking', 
+                           'add_hotel_to_booking', 'add_transfer', 'add_activity']
+            if any(tc['name'] in booking_tools for tc in result.get('tool_calls', [])):
+                conversation = get_conversation(conversation_id)
+                if conversation and conversation.get('status') != 'active':
+                    update_conversation(conversation_id, status='active')
 
         return {
             "conversation_id": conversation_id,

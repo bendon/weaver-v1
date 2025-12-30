@@ -67,11 +67,11 @@ class BookingAssistant:
                     "properties": {
                         "origin": {
                             "type": "string",
-                            "description": "IATA airport code for departure (e.g., 'JFK', 'NBO')"
+                            "description": "Departure city name (e.g., 'Kampala', 'Nairobi') or IATA airport code (e.g., 'EBB', 'NBO'). City names will be automatically converted to airport codes."
                         },
                         "destination": {
                             "type": "string",
-                            "description": "IATA airport code for arrival (e.g., 'LAX', 'NBO')"
+                            "description": "Arrival city name (e.g., 'Kampala', 'Nairobi') or IATA airport code (e.g., 'EBB', 'NBO'). City names will be automatically converted to airport codes."
                         },
                         "departure_date": {
                             "type": "string",
@@ -501,6 +501,75 @@ class BookingAssistant:
             }
         ]
 
+    def _get_iata_code(self, location: str) -> Optional[str]:
+        """Convert city name or IATA code to IATA code"""
+        location = location.strip()
+        
+        # Check if it's already a valid IATA code (3 uppercase letters)
+        if len(location) == 3 and location.isupper() and location.isalpha():
+            return location
+        
+        # Try to find IATA code from local database
+        try:
+            from app.core.database import get_connection
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            name_lower = location.lower()
+            name_upper = location.upper()
+            
+            cursor.execute("""
+                SELECT iata_code
+                FROM airports
+                WHERE 
+                    LOWER(city) = ? OR
+                    LOWER(city) LIKE ? OR
+                    LOWER(name) LIKE ? OR
+                    iata_code = ?
+                ORDER BY 
+                    CASE WHEN LOWER(city) = ? THEN 1 ELSE 2 END,
+                    CASE WHEN LOWER(name) LIKE ? THEN 1 ELSE 2 END
+                LIMIT 1
+            """, (
+                name_lower,  # Exact city match
+                f"{name_lower}%",  # City starts with
+                f"%{name_lower}%",  # Name contains
+                name_upper,  # Exact IATA code
+                name_lower,  # For ordering
+                f"{name_lower}%",  # For ordering
+            ))
+            
+            row = cursor.fetchone()
+            conn.close()
+            
+            if row:
+                return row["iata_code"]
+        except Exception as e:
+            print(f"Error searching local database for airport: {e}")
+        
+        # Fall back to Amadeus if available
+        if self.amadeus_client:
+            try:
+                # Try searching as airport
+                result = self.amadeus_client.search_airports(location, sub_type="AIRPORT")
+                locations = result.get("data", [])
+                if locations:
+                    iata_code = locations[0].get("iataCode")
+                    if iata_code:
+                        return iata_code
+                
+                # Try searching as city
+                result = self.amadeus_client.search_airports(location, sub_type="CITY")
+                locations = result.get("data", [])
+                if locations:
+                    iata_code = locations[0].get("iataCode")
+                    if iata_code:
+                        return iata_code
+            except Exception:
+                pass
+        
+        return None
+
     def execute_tool(
         self,
         tool_name: str,
@@ -560,14 +629,23 @@ class BookingAssistant:
             return {"error": str(e)}
 
     def _search_flights(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Search for flights using Amadeus"""
+        """Search for flights using Amadeus - automatically converts city names to IATA codes"""
         if not self.amadeus_client:
             return {"error": "Flight search is not configured. Please set Amadeus API credentials."}
 
         try:
+            # Convert city names to IATA codes if needed
+            origin = self._get_iata_code(params["origin"])
+            destination = self._get_iata_code(params["destination"])
+            
+            if not origin:
+                return {"error": f"Could not find airport code for origin: {params['origin']}. Please provide a city name or IATA code."}
+            if not destination:
+                return {"error": f"Could not find airport code for destination: {params['destination']}. Please provide a city name or IATA code."}
+            
             results = self.amadeus_client.search_flights(
-                origin=params["origin"],
-                destination=params["destination"],
+                origin=origin,
+                destination=destination,
                 departure_date=params["departure_date"],
                 return_date=params.get("return_date"),
                 adults=params.get("adults", 1),
@@ -1005,14 +1083,14 @@ class BookingAssistant:
 - Professional: accurate with dates, prices, and details
 
 ✈️ How you help travelers:
-1. **Understand their needs**: Ask about destination, dates, travelers, preferences
-2. **Search & present options**: Use your tools to find flights, hotels, transfers, activities
-3. **Guide decisions**: Present options clearly, help compare, recommend based on preferences
-4. **Book everything**: Create the complete itinerary in one conversation
-5. **Confirm & summarize**: Always confirm before booking, summarize what's been created
+1. **Understand their needs**: Ask conversational questions about destination, dates, travelers, preferences. You can accept city names (like "Kampala" or "Nairobi") - they'll be automatically converted to airport codes.
+2. **Search & present options**: Use your tools to find flights, hotels, transfers, activities. Always show top options with clear pricing and details.
+3. **Guide decisions**: Present options clearly, help compare, recommend based on preferences. Be proactive in suggesting next steps.
+4. **Book everything**: Create the complete itinerary through natural conversation. Ask follow-up questions to gather all needed information.
+5. **Confirm & summarize**: Always confirm before booking, summarize what's been created, celebrate completed bookings!
 
 🛠 Your available tools:
-- **search_flights**: Find real flights with Amadeus (always show top options with prices)
+- **search_flights**: Find real flights with Amadeus. Accepts city names (e.g., "Kampala", "Nairobi") or IATA codes (e.g., "EBB", "NBO") - automatically converts city names. Always show top options with prices.
 - **search_hotels**: Find real hotels with Amadeus (show with ratings and amenities)
 - **create_booking**: Start a new trip (do this first!)
 - **add_traveler**: Add travelers to booking (get their details)
@@ -1045,8 +1123,12 @@ class BookingAssistant:
 - Celebrate completed bookings: "All set! Your Tokyo adventure is ready! 🎉"
 - Ask follow-ups: "Would you like me to add airport transfers?"
 - Reference previous context: "For your Tokyo trip on March 15..."
+- **Automatically convert city names**: When users say "Kampala" or "Nairobi", automatically convert to airport codes (EBB, NBO) - don't ask for IATA codes!
+- **Be proactive**: If user says "I need a flight from Kampala to Nairobi", immediately search flights - don't ask for airport codes first!
+- **Ask clarifying questions naturally**: "Is this a round trip or one-way?" "Any preferred departure times?" "Any airline preferences?"
+- **Gather all info conversationally**: Ask about travelers, dates, preferences through natural conversation, not a form
 
-Remember: You're not just a search engine - you're a travel planning partner who creates complete, amazing trips through conversation! 🌍✨
+Remember: You're not just a search engine - you're a travel planning partner who creates complete, amazing trips through conversation! 🌍✨"""
 
         tool_calls_made = []
         response_text = ""
