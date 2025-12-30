@@ -107,14 +107,19 @@
   flex-shrink: 0;
 }
 
+.message-avatar svg {
+  color: #000000;
+  stroke: #000000;
+}
+
 .message-user .message-avatar {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  color: white;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
 }
 
 .message-assistant .message-avatar {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
 }
 
 .message-content {
@@ -178,6 +183,11 @@
   font-weight: 600;
   color: #475569;
   margin-bottom: 8px;
+}
+
+.tool-call-header svg {
+  color: #000000;
+  stroke: #000000;
 }
 
 .tool-call-name {
