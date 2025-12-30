@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Bot, Plus, BookOpen, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Bot, Plus, BookOpen, Clock, CheckCircle, MessageSquare, Plane, Hotel, CloudSun, MapPin, FileText } from 'lucide-react';
 import { AIChatInterface } from '../components/chat/AIChatInterface';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -137,46 +137,54 @@ export default function AIBookingAssistantView() {
       {/* Info Panel (Optional - can be toggled) */}
       <div className="assistant-info-panel">
         <div className="info-panel-content">
-          <h3>Quick Tips</h3>
+          <h3>Assistant Capabilities</h3>
           <div className="tips-list">
             <div className="tip-item">
-              <div className="tip-icon">💡</div>
+              <div className="tip-icon">
+                <MessageSquare size={18} />
+              </div>
               <div>
-                <strong>Natural Language</strong>
-                <p>Just describe what you need - "I need a Kenya safari for 2 people in March"</p>
+                <strong>Natural Language Processing</strong>
+                <p>Communicate your requirements in plain language for intelligent booking assistance</p>
               </div>
             </div>
             <div className="tip-item">
-              <div className="tip-icon">✈️</div>
+              <div className="tip-icon">
+                <Plane size={18} />
+              </div>
               <div>
-                <strong>Flight Search</strong>
-                <p>The AI can search flights, hotels, and create complete itineraries</p>
+                <strong>Comprehensive Search</strong>
+                <p>Access real-time flight, hotel, and itinerary search capabilities</p>
               </div>
             </div>
             <div className="tip-item">
-              <div className="tip-icon">✅</div>
+              <div className="tip-icon">
+                <FileText size={18} />
+              </div>
               <div>
-                <strong>Review & Confirm</strong>
-                <p>Always review the booking details before finalizing</p>
+                <strong>Verification Process</strong>
+                <p>Review all booking details and pricing before confirmation</p>
               </div>
             </div>
             <div className="tip-item">
-              <div className="tip-icon">🔄</div>
+              <div className="tip-icon">
+                <Bot size={18} />
+              </div>
               <div>
-                <strong>Refine Anytime</strong>
-                <p>Ask to modify dates, change hotels, or adjust any details</p>
+                <strong>Dynamic Modifications</strong>
+                <p>Request changes to dates, accommodations, or itinerary at any time</p>
               </div>
             </div>
           </div>
 
           <div className="info-section">
-            <h4>Available Tools</h4>
+            <h4>Available Services</h4>
             <div className="tools-list">
-              <span className="tool-badge">Flight Search</span>
-              <span className="tool-badge">Hotel Search</span>
-              <span className="tool-badge">Weather Check</span>
-              <span className="tool-badge">Airport Info</span>
-              <span className="tool-badge">Create Booking</span>
+              <span className="tool-badge"><Plane size={12} /> Flight Booking</span>
+              <span className="tool-badge"><Hotel size={12} /> Accommodation</span>
+              <span className="tool-badge"><CloudSun size={12} /> Weather Data</span>
+              <span className="tool-badge"><MapPin size={12} /> Location Info</span>
+              <span className="tool-badge"><FileText size={12} /> Documentation</span>
             </div>
           </div>
         </div>
