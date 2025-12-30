@@ -1222,10 +1222,42 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/chat/conversations`, {
       method: 'POST',
       headers: createHeaders(),
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         message: message || 'Start new conversation',
-        conversation_id: null 
+        conversation_id: null
       }),
+    });
+    return handleApiResponse(response);
+  },
+
+  /**
+   * AI Chat: Update conversation (stage, outcome, follow-up)
+   * PATCH /api/chat/conversations/{conversation_id}
+   */
+  async updateConversation(conversationId: string, updates: {
+    stage?: string;
+    outcome?: string;
+    status?: string;
+    follow_up_date?: string;
+    follow_up_notes?: string;
+    tags?: string;
+  }): Promise<{ success: boolean; message: string; conversation: any }> {
+    const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}`, {
+      method: 'PATCH',
+      headers: createHeaders(),
+      body: JSON.stringify(updates),
+    });
+    return handleApiResponse(response);
+  },
+
+  /**
+   * AI Chat: Delete conversation
+   * DELETE /api/chat/conversations/{conversation_id}
+   */
+  async deleteConversation(conversationId: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}`, {
+      method: 'DELETE',
+      headers: createHeaders(),
     });
     return handleApiResponse(response);
   },

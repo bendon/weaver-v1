@@ -194,13 +194,21 @@ async def send_message(
             tool_calls=result.get('tool_calls')
         )
 
-        # Check if a booking was created and link it (and update title if needed)
+        # Check if a booking was created and link it (and update title + stage)
         for tool_call in result.get('tool_calls', []):
             if tool_call['name'] == 'create_booking' and tool_call['result'].get('success'):
                 booking_id = tool_call['result']['booking_id']
                 # Update title with booking title if available
                 title = generate_conversation_title(request.message, booking_id)
-                update_conversation(conversation_id, booking_id=booking_id, title=title)
+                # Update stage to booking_in_progress
+                update_conversation(conversation_id, booking_id=booking_id, title=title, stage='booking_in_progress')
+
+            # If flight or hotel was added, also update stage
+            elif tool_call['name'] in ['add_flight_to_booking', 'add_hotel_to_booking'] and tool_call['result'].get('success'):
+                # Get current conversation to check stage
+                conv = get_conversation(conversation_id)
+                if conv and conv.get('stage') == 'lead':
+                    update_conversation(conversation_id, stage='qualified')
 
         return {
             "conversation_id": conversation_id,
@@ -310,4 +318,78 @@ async def delete_conversation(
         raise
     except Exception as e:
         print(f"Error deleting conversation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class UpdateConversationRequest(BaseModel):
+    stage: Optional[str] = None
+    outcome: Optional[str] = None
+    status: Optional[str] = None
+    follow_up_date: Optional[str] = None
+    follow_up_notes: Optional[str] = None
+    tags: Optional[str] = None
+
+
+@router.patch("/conversations/{conversation_id}")
+async def update_conversation_endpoint(
+    conversation_id: str,
+    request: UpdateConversationRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update conversation stage, outcome, follow-up, etc."""
+    try:
+        conversation = get_conversation(conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+        # Verify access
+        if conversation['organization_id'] != current_user['organization_id']:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Build update dict
+        updates = {}
+        if request.stage:
+            updates['stage'] = request.stage
+        if request.outcome:
+            updates['outcome'] = request.outcome
+        if request.status:
+            updates['status'] = request.status
+        if request.follow_up_date is not None:  # Allow empty string to clear
+            updates['follow_up_date'] = request.follow_up_date
+        if request.follow_up_notes is not None:
+            updates['follow_up_notes'] = request.follow_up_notes
+        if request.tags is not None:
+            updates['tags'] = request.tags
+
+        # If follow_up_date is set, auto-update stage
+        if request.follow_up_date and request.follow_up_date.strip():
+            updates['stage'] = 'follow_up_scheduled'
+
+        # If outcome is 'booked', update stage to booking_completed
+        if request.outcome == 'booked':
+            updates['stage'] = 'booking_completed'
+            updates['status'] = 'completed'
+        elif request.outcome in ['declined', 'no_response']:
+            updates['stage'] = 'no_sale'
+            updates['status'] = 'completed'
+
+        if not updates:
+            raise HTTPException(status_code=400, detail="No fields to update")
+
+        success = update_conversation(conversation_id, **updates)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update conversation")
+
+        # Get updated conversation
+        updated_conv = get_conversation(conversation_id)
+
+        return {
+            "success": True,
+            "message": "Conversation updated successfully",
+            "conversation": updated_conv
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating conversation: {e}")
         raise HTTPException(status_code=500, detail=str(e))

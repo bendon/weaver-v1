@@ -394,17 +394,32 @@ def init_database():
             conversation_type TEXT DEFAULT 'booking',
             title TEXT DEFAULT 'New Conversation',
             status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'abandoned')),
+            stage TEXT DEFAULT 'lead' CHECK (stage IN ('lead', 'qualified', 'booking_in_progress', 'booking_completed', 'no_sale', 'follow_up_scheduled')),
+            outcome TEXT CHECK (outcome IN ('booked', 'declined', 'needs_info', 'no_response', 'follow_up', NULL)),
+            follow_up_date TEXT,
+            follow_up_notes TEXT,
+            tags TEXT,
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
 
-    # Add title column if it doesn't exist (migration for existing databases)
-    try:
-        cursor.execute("ALTER TABLE conversations ADD COLUMN title TEXT DEFAULT 'New Conversation'")
-    except sqlite3.OperationalError:
-        # Column already exists, ignore
-        pass
+    # Migrations for existing databases (add new columns if they don't exist)
+    migrations = [
+        ("title", "TEXT DEFAULT 'New Conversation'"),
+        ("stage", "TEXT DEFAULT 'lead'"),
+        ("outcome", "TEXT"),
+        ("follow_up_date", "TEXT"),
+        ("follow_up_notes", "TEXT"),
+        ("tags", "TEXT"),
+    ]
+
+    for column_name, column_def in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE conversations ADD COLUMN {column_name} {column_def}")
+        except sqlite3.OperationalError:
+            # Column already exists, ignore
+            pass
     
     # ============================================================
     # AI CONVERSATION MESSAGES
