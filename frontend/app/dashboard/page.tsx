@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import dynamic from 'next/dynamic';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DashboardPage } from '@/components/dashboard/DashboardPage';
 
-const AIBookingAssistantView = dynamic(() => import('@/views/AIBookingAssistantView'), { ssr: false });
-
-export default function HomePage() {
+export default function Dashboard() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -30,8 +29,8 @@ export default function HomePage() {
   }
 
   return (
-    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><div>Loading AI Assistant...</div></div>}>
-      <AIBookingAssistantView />
-    </Suspense>
+    <DashboardLayout breadcrumbs={[{ label: 'Dashboard' }]}>
+      <DashboardPage />
+    </DashboardLayout>
   );
 }

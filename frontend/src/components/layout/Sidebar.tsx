@@ -1,17 +1,18 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Users, 
-  MessageSquare, 
-  Plane, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  MessageSquare,
+  Plane,
+  Settings,
   Zap,
   Menu,
   X,
-  Building2
+  Building2,
+  Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,12 +32,12 @@ export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const navItems: NavItem[] = [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { label: 'AI Assistant', href: '/', icon: Sparkles },
+    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Bookings', href: '/bookings', icon: Calendar },
     { label: 'Travelers', href: '/travelers', icon: Users },
     { label: 'Messages', href: '/messages', icon: MessageSquare, badge: 0 }, // TODO: Get unread count
     { label: 'Flights', href: '/flights', icon: Plane },
-    { label: 'AI Assistant', href: '/chat', icon: MessageSquare },
     { label: 'Automation', href: '/automation', icon: Zap },
     { label: 'Settings', href: '/settings', icon: Settings },
   ];
