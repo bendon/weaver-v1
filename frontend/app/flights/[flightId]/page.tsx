@@ -25,6 +25,10 @@ function FlightDetailContent() {
         { label: 'Flights', href: '/flights' },
         { label: `${flight.carrier_code || ''}${flight.flight_number || ''}` },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/flights',
+      }}
     >
       <div>
         <h2>Flight Details</h2>

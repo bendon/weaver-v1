@@ -491,9 +491,7 @@ export const api = {
   async searchAirports(request: AirportSearchRequest): Promise<{ data: Array<{ iataCode: string; name: string; cityName: string; countryCode: string }> }> {
     const response = await fetch(`${API_BASE_URL}/api/airports/search`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(), // Include auth token
       body: JSON.stringify(request),
     });
     if (!response.ok) {

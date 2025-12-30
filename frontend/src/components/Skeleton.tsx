@@ -7,6 +7,7 @@ interface SkeletonProps {
   circle?: boolean;
   count?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function Skeleton({
@@ -14,7 +15,8 @@ export function Skeleton({
   height = '1rem',
   circle = false,
   count = 1,
-  className = ''
+  className = '',
+  style
 }: SkeletonProps) {
   const skeletons = Array.from({ length: count }, (_, i) => (
     <div
@@ -23,6 +25,7 @@ export function Skeleton({
       style={{
         width: width || (circle ? height : '100%'),
         height,
+        ...style,
       }}
     />
   ));

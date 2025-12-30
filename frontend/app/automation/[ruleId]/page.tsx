@@ -15,6 +15,10 @@ function AutomationRuleEditContent() {
         { label: 'Automation', href: '/automation' },
         { label: ruleId },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/automation',
+      }}
     >
       <div>
         <p>Edit automation rule {ruleId} - to be implemented</p>

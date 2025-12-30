@@ -15,6 +15,10 @@ function MessageThreadContent() {
         { label: 'Messages', href: '/messages' },
         { label: travelerId },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/messages',
+      }}
     >
       <div>
         <p>Message thread with traveler {travelerId} - to be implemented</p>

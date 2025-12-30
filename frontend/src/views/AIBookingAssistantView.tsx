@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Bot, Plus, BookOpen, Clock, CheckCircle } from 'lucide-react';
@@ -7,10 +7,21 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import './AIBookingAssistantView.css';
 
-export default function AIBookingAssistantView() {
+interface AIBookingAssistantViewProps {
+  conversationId?: string;
+}
+
+export default function AIBookingAssistantView({ conversationId: propConversationId }: AIBookingAssistantViewProps = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(propConversationId || null);
+
+  // Update active conversation when prop changes
+  useEffect(() => {
+    if (propConversationId) {
+      setActiveConversationId(propConversationId);
+    }
+  }, [propConversationId]);
 
   // Fetch recent conversations
   const { data: conversationsData } = useQuery({

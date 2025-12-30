@@ -10,16 +10,42 @@ from app.core.database import (
     create_conversation, get_conversation, get_conversations_by_user,
     update_conversation, add_conversation_message, get_conversation_messages
 )
-from app.ai_assistant import BookingAssistant
 
 router = APIRouter()
 
-# Initialize AI assistant
-try:
-    assistant = BookingAssistant()
-except Exception as e:
-    print(f"Warning: Could not initialize AI assistant: {e}")
-    assistant = None
+# Initialize AI assistant (lazy initialization - only when needed)
+_assistant = None
+_assistant_error = None
+_BookingAssistant = None
+
+def get_assistant():
+    """Get or initialize the AI assistant (lazy initialization)"""
+    global _assistant, _assistant_error, _BookingAssistant
+    
+    if _assistant is not None:
+        return _assistant
+    
+    if _assistant_error:
+        return None
+    
+    try:
+        if _BookingAssistant is None:
+            from app.ai_assistant import BookingAssistant as BookingAssistantClass
+            _BookingAssistant = BookingAssistantClass
+        
+        _assistant = _BookingAssistant()
+        print("✓ AI Assistant initialized successfully")
+        return _assistant
+    except ImportError as e:
+        _assistant_error = f"anthropic package not installed: {e}"
+        print(f"Warning: {_assistant_error}")
+        return None
+    except Exception as e:
+        _assistant_error = str(e)
+        print(f"Warning: Could not initialize AI assistant: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
 class ChatMessageRequest(BaseModel):
@@ -42,10 +68,17 @@ async def send_message(
 ):
     """Send message to AI booking assistant"""
 
+    # Lazy initialize assistant on first use
+    assistant = get_assistant()
     if not assistant:
+        error_msg = "AI assistant is not configured."
+        if _assistant_error:
+            error_msg += f" Error: {_assistant_error}"
+        else:
+            error_msg += " Please set ANTHROPIC_API_KEY environment variable."
         raise HTTPException(
             status_code=503,
-            detail="AI assistant is not configured. Please set ANTHROPIC_API_KEY environment variable."
+            detail=error_msg
         )
 
     try:

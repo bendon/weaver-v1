@@ -19,6 +19,11 @@
   background: var(--bg-primary);
 }
 
+/* Breadcrumb bar spacing */
+.breadcrumb-bar + .dashboard-content {
+  padding-top: var(--spacing-lg);
+}
+
 @media (max-width: 1024px) {
   .dashboard-main {
     margin-left: 0;

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { Search, MessageSquare, Send, Phone, Mail, Filter, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import './MessageCenter.css';
 
 export const MessageCenter: React.FC = () => {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);

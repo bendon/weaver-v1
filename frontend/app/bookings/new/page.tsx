@@ -122,19 +122,45 @@ export default function NewBookingPage() {
 
         // Extract flight details from Amadeus offer
         const outbound = flight.itineraries?.[0];
-        const firstSegment = outbound?.segments?.[0];
-        const lastSegment = outbound?.segments?.[outbound.segments.length - 1];
+        const returnItinerary = flight.itineraries?.[1];
+        
+        const outboundFirst = outbound?.segments?.[0];
+        const outboundLast = outbound?.segments?.[outbound?.segments?.length - 1];
+        
+        const returnFirst = returnItinerary?.segments?.[0];
+        const returnLast = returnItinerary?.segments?.[returnItinerary?.segments?.length - 1];
 
-        if (firstSegment && lastSegment) {
+        // Add outbound flight
+        if (outboundFirst && outboundLast) {
+          const departureDate = new Date(outboundFirst.departure.at);
           await api.addFlightToBooking(booking.id, {
-            airline: firstSegment.carrierCode,
-            flight_number: firstSegment.number,
-            departure_airport: firstSegment.departure.iataCode,
-            arrival_airport: lastSegment.arrival.iataCode,
-            departure_time: firstSegment.departure.at,
-            arrival_time: lastSegment.arrival.at,
+            carrier_code: outboundFirst.carrierCode,
+            flight_number: outboundFirst.number,
+            departure_date: departureDate.toISOString().split('T')[0],
+            departure_airport: outboundFirst.departure.iataCode,
+            arrival_airport: outboundLast.arrival.iataCode,
+            scheduled_departure: outboundFirst.departure.at,
+            scheduled_arrival: outboundLast.arrival.at,
+            flight_type: 'outbound',
             booking_reference: flight.id, // Use offer ID as temp reference
-            status: 'confirmed',
+            status: 'scheduled',
+          });
+        }
+
+        // Add return flight if it exists
+        if (returnItinerary && returnFirst && returnLast) {
+          const returnDepartureDate = new Date(returnFirst.departure.at);
+          await api.addFlightToBooking(booking.id, {
+            carrier_code: returnFirst.carrierCode,
+            flight_number: returnFirst.number,
+            departure_date: returnDepartureDate.toISOString().split('T')[0],
+            departure_airport: returnFirst.departure.iataCode,
+            arrival_airport: returnLast.arrival.iataCode,
+            scheduled_departure: returnFirst.departure.at,
+            scheduled_arrival: returnLast.arrival.at,
+            flight_type: 'return',
+            booking_reference: flight.id, // Use offer ID as temp reference
+            status: 'scheduled',
           });
         }
       }
@@ -224,6 +250,10 @@ export default function NewBookingPage() {
         { label: 'Bookings', href: '/bookings' },
         { label: 'New Booking' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/bookings',
+      }}
     >
       <div className="new-booking-page">
         {/* Progress Steps */}

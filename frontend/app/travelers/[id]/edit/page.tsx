@@ -16,6 +16,10 @@ function TravelerEditContent() {
         { label: travelerId, href: `/travelers/${travelerId}` },
         { label: 'Edit' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: `/travelers/${travelerId}`,
+      }}
     >
       <div>
         <p>Edit traveler form - to be implemented</p>

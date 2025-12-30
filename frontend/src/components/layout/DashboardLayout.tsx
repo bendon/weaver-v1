@@ -2,6 +2,7 @@
 
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { BreadcrumbBar } from './BreadcrumbBar';
 import './DashboardLayout.css';
 
 interface DashboardLayoutProps {
@@ -9,19 +10,26 @@ interface DashboardLayoutProps {
   title?: string;
   breadcrumbs?: Array<{ label: string; href?: string }>;
   actions?: React.ReactNode;
+  backButton?: {
+    label?: string;
+    href?: string;
+    onClick?: () => void;
+  };
 }
 
 export function DashboardLayout({ 
   children, 
   title, 
   breadcrumbs, 
-  actions 
+  actions,
+  backButton
 }: DashboardLayoutProps) {
   return (
     <div className="dashboard-layout">
       <Sidebar />
       <div className="dashboard-main">
-        <Header title={title} breadcrumbs={breadcrumbs} actions={actions} />
+        <Header title={title} actions={actions} />
+        <BreadcrumbBar breadcrumbs={breadcrumbs} backButton={backButton} />
         <main className="dashboard-content">
           {children}
         </main>

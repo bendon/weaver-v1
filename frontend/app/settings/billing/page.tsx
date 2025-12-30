@@ -11,6 +11,10 @@ function BillingSettingsContent() {
         { label: 'Settings', href: '/settings' },
         { label: 'Billing' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/settings',
+      }}
     >
       <div>
         <p>Billing settings - to be implemented</p>

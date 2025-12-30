@@ -176,14 +176,14 @@ function BookingItineraryContent() {
         { label: booking.booking_code || bookingId, href: `/bookings/${bookingId}` },
         { label: 'Itinerary' },
       ]}
+      backButton={{
+        label: 'Back to Booking',
+        href: `/bookings/${bookingId}`,
+      }}
     >
       <div className="itinerary-page">
         {/* Header */}
         <div className="itinerary-header">
-          <button className="btn-link" onClick={() => router.push(`/bookings/${bookingId}`)}>
-            <ArrowLeft size={20} />
-            Back to Booking
-          </button>
           <h1>{booking.title || 'Trip Itinerary'}</h1>
           <p className="itinerary-dates">
             {booking.start_date && booking.end_date && (

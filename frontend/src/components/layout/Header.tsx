@@ -13,11 +13,10 @@ interface Breadcrumb {
 
 interface HeaderProps {
   title?: string;
-  breadcrumbs?: Breadcrumb[];
   actions?: React.ReactNode;
 }
 
-export function Header({ title, breadcrumbs, actions }: HeaderProps) {
+export function Header({ title, actions }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -46,61 +45,21 @@ export function Header({ title, breadcrumbs, actions }: HeaderProps) {
     router.push('/login');
   };
 
-  // Generate breadcrumbs from pathname if not provided
-  const generateBreadcrumbs = (): Breadcrumb[] => {
-    if (breadcrumbs) return breadcrumbs;
-    
+  // Generate title from pathname if not provided
+  const pageTitle = title || (() => {
     const paths = pathname?.split('/').filter(Boolean) || [];
-    const crumbs: Breadcrumb[] = [{ label: 'Dashboard', href: '/' }];
-    
-    let currentPath = '';
-    paths.forEach((path, index) => {
-      currentPath += `/${path}`;
-      const label = path
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      crumbs.push({
-        label,
-        href: index === paths.length - 1 ? undefined : currentPath,
-      });
-    });
-    
-    return crumbs;
-  };
-
-  const finalBreadcrumbs = generateBreadcrumbs();
-  const pageTitle = title || finalBreadcrumbs[finalBreadcrumbs.length - 1]?.label || 'Dashboard';
+    if (paths.length === 0) return 'Dashboard';
+    const lastPath = paths[paths.length - 1];
+    return lastPath
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  })();
 
   return (
     <header className="app-header">
       <div className="header-content">
         <div className="header-left">
-          {finalBreadcrumbs.length > 1 && (
-            <nav className="breadcrumbs" aria-label="Breadcrumb">
-              {finalBreadcrumbs.map((crumb, index) => (
-                <span key={index} className="breadcrumb-item">
-                  {crumb.href ? (
-                    <a
-                      href={crumb.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        router.push(crumb.href!);
-                      }}
-                      className="breadcrumb-link"
-                    >
-                      {crumb.label}
-                    </a>
-                  ) : (
-                    <span className="breadcrumb-current">{crumb.label}</span>
-                  )}
-                  {index < finalBreadcrumbs.length - 1 && (
-                    <span className="breadcrumb-separator">/</span>
-                  )}
-                </span>
-              ))}
-            </nav>
-          )}
           <h1 className="header-title">{pageTitle}</h1>
         </div>
 

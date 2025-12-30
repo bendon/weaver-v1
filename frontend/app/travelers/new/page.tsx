@@ -51,12 +51,12 @@ function NewTravelerContent() {
         { label: 'Travelers', href: '/travelers' },
         { label: 'New' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/travelers',
+      }}
     >
       <div style={{ maxWidth: '800px' }}>
-        <button onClick={() => router.back()}>
-          <ArrowLeft size={20} />
-          Back
-        </button>
         <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
             <div>

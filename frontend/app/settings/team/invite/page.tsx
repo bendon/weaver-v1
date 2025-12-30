@@ -12,6 +12,10 @@ function InviteMemberContent() {
         { label: 'Team', href: '/settings/team' },
         { label: 'Invite' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/settings/team',
+      }}
     >
       <div>
         <p>Invite team member form - to be implemented</p>

@@ -34,6 +34,10 @@ function BookingSendContent() {
         { label: booking?.booking_code || bookingId, href: `/bookings/${bookingId}` },
         { label: 'Send' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: `/bookings/${bookingId}`,
+      }}
     >
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         {step === 1 && (

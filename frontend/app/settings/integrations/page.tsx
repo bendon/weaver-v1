@@ -11,6 +11,10 @@ function IntegrationsSettingsContent() {
         { label: 'Settings', href: '/settings' },
         { label: 'Integrations' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/settings',
+      }}
     >
       <div>
         <p>Integrations settings - to be implemented</p>

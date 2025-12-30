@@ -11,6 +11,10 @@ function OrganizationSettingsContent() {
         { label: 'Settings', href: '/settings' },
         { label: 'Organization' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/settings',
+      }}
     >
       <div>
         <p>Organization settings - to be implemented</p>

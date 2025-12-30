@@ -25,6 +25,10 @@ function TravelerDetailContent() {
         { label: 'Travelers', href: '/travelers' },
         { label: `${traveler.first_name} ${traveler.last_name}` },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/travelers',
+      }}
     >
       <div>
         <h2>Traveler Profile</h2>

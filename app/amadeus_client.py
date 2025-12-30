@@ -234,6 +234,25 @@ class AmadeusClient:
         
         return self._make_request("GET", endpoint, params=params)
     
+    def search_airports(self, keyword: str, sub_type: str = "AIRPORT") -> Dict:
+        """
+        Search for airports or cities by keyword
+        
+        Args:
+            keyword: Search keyword (airport code, city name, etc.)
+            sub_type: "AIRPORT" or "CITY" (default: "AIRPORT")
+        
+        Returns:
+            Dictionary containing matching locations
+        """
+        endpoint = "/v1/reference-data/locations"
+        params = {
+            "subType": sub_type,
+            "keyword": keyword
+        }
+        
+        return self._make_request("GET", endpoint, params=params)
+    
     def get_airport_info(self, airport_code: str) -> Dict:
         """
         Get airport information

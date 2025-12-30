@@ -11,6 +11,10 @@ function TemplatesPageContent() {
         { label: 'Automation', href: '/automation' },
         { label: 'Templates' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/automation',
+      }}
     >
       <div>
         <p>Message templates management - to be implemented</p>

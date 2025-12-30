@@ -25,19 +25,49 @@ def get_db_path() -> Path:
     return db_path
 
 
-def get_connection():
-    """Get database connection"""
+def get_connection(timeout: float = 5.0):
+    """Get database connection with timeout to handle locking"""
     db_path = get_db_path()
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(str(db_path), timeout=timeout)
     conn.row_factory = sqlite3.Row
     # Enable foreign keys
     conn.execute("PRAGMA foreign_keys = ON")
+    # Set busy timeout to handle concurrent access
+    conn.execute("PRAGMA busy_timeout = 3000")  # 3 seconds
     return conn
 
 
 def generate_id() -> str:
     """Generate a random lowercase hex ID"""
     return secrets.token_hex(8)
+
+
+def seed_airports(cursor):
+    """Seed airports table from JSON file"""
+    try:
+        airports_file = Path(__file__).parent.parent / "data" / "airports.json"
+        if not airports_file.exists():
+            print(f"Warning: airports.json not found at {airports_file}")
+            return
+        
+        with open(airports_file, 'r', encoding='utf-8') as f:
+            airports = json.load(f)
+        
+        for airport in airports:
+            cursor.execute("""
+                INSERT OR REPLACE INTO airports (
+                    iata_code, name, city, country
+                ) VALUES (?, ?, ?, ?)
+            """, (
+                airport.get('iata_code'),
+                airport.get('name'),
+                airport.get('city'),
+                airport.get('country')
+            ))
+        
+        print(f"Seeded {len(airports)} airports from airports.json")
+    except Exception as e:
+        print(f"Error seeding airports: {e}")
 
 
 def init_database():
@@ -438,10 +468,21 @@ def init_database():
         "CREATE INDEX IF NOT EXISTS idx_automation_rules_org ON automation_rules(organization_id)",
         "CREATE INDEX IF NOT EXISTS idx_conversations_org ON conversations(organization_id)",
         "CREATE INDEX IF NOT EXISTS idx_conversation_messages_conv ON conversation_messages(conversation_id)",
+        "CREATE INDEX IF NOT EXISTS idx_airports_city ON airports(city)",
+        "CREATE INDEX IF NOT EXISTS idx_airports_name ON airports(name)",
+        "CREATE INDEX IF NOT EXISTS idx_airports_country ON airports(country)",
     ]
     
     for index_sql in indexes:
         cursor.execute(index_sql)
+    
+    # Seed airports from JSON file if table is empty
+    cursor.execute("SELECT COUNT(*) as count FROM airports")
+    airport_count = cursor.fetchone()[0]
+    if airport_count == 0:
+        seed_airports(cursor)
+    
+    conn.commit()
     
     # ============================================================
     # CREATE VIEWS
@@ -787,20 +828,66 @@ def get_bookings_by_organization(organization_id: str, status: Optional[str] = N
 def link_traveler_to_booking(booking_id: str, traveler_id: str, is_primary: bool = False) -> Optional[str]:
     """Link a traveler to a booking"""
     import secrets
-    link_id = f"bt_{secrets.token_hex(8)}"
     
     try:
         conn = get_connection()
         cursor = conn.cursor()
+        
+        # Validate that booking exists
+        cursor.execute("SELECT id FROM bookings WHERE id = ?", (booking_id,))
+        if not cursor.fetchone():
+            conn.close()
+            print(f"Error linking traveler to booking: Booking {booking_id} not found")
+            return None
+        
+        # Validate that traveler exists
+        cursor.execute("SELECT id FROM travelers WHERE id = ?", (traveler_id,))
+        if not cursor.fetchone():
+            conn.close()
+            print(f"Error linking traveler to booking: Traveler {traveler_id} not found")
+            return None
+        
+        # Check if link already exists
         cursor.execute("""
-            INSERT INTO booking_travelers (id, booking_id, traveler_id, is_primary)
-            VALUES (?, ?, ?, ?)
-        """, (link_id, booking_id, traveler_id, 1 if is_primary else 0))
+            SELECT id FROM booking_travelers 
+            WHERE booking_id = ? AND traveler_id = ?
+        """, (booking_id, traveler_id))
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Update existing link
+            link_id = existing['id']
+            cursor.execute("""
+                UPDATE booking_travelers 
+                SET is_primary = ?
+                WHERE id = ?
+            """, (1 if is_primary else 0, link_id))
+        else:
+            # Create new link
+            link_id = f"bt_{secrets.token_hex(8)}"
+            cursor.execute("""
+                INSERT INTO booking_travelers (id, booking_id, traveler_id, is_primary)
+                VALUES (?, ?, ?, ?)
+            """, (link_id, booking_id, traveler_id, 1 if is_primary else 0))
+        
         conn.commit()
         conn.close()
         return link_id
+    except sqlite3.IntegrityError as e:
+        print(f"Error linking traveler to booking (integrity): {e}")
+        try:
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
+        return None
     except Exception as e:
         print(f"Error linking traveler to booking: {e}")
+        try:
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
         return None
 
 

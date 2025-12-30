@@ -7,7 +7,11 @@ import os
 import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
-from anthropic import Anthropic
+
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None  # type: ignore
 
 # Import our API modules
 from app.amadeus_client import AmadeusClient
@@ -23,12 +27,18 @@ class BookingAssistant:
 
     def __init__(self, api_key: Optional[str] = None):
         """Initialize the assistant with Anthropic API key"""
+        if Anthropic is None:
+            raise ImportError("anthropic package is not installed. Install it with: pip install anthropic")
+        
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable is required")
 
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-3-5-sonnet-20241022"
+        # Use Claude 3 Opus (works with this API key)
+        # Note: If you have access to Claude 3.5 Sonnet, you can change this to:
+        # "claude-3-5-sonnet-20241022" or "claude-3-5-sonnet-20240620"
+        self.model = "claude-3-opus-20240229"
 
         # Initialize Amadeus client for flight searches
         self.amadeus_client = None

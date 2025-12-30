@@ -15,7 +15,7 @@ python-dotenv==1.0.0
 amadeus==8.1.0
 
 # Anthropic AI
-anthropic==0.18.1
+anthropic>=0.75.0
 
 # HTTP Clients
 httpx==0.26.0

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Edit, Copy, Send, Download, Trash2, Calendar, Users, Plane, MessageSquare, Activity } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Edit, Copy, Send, Download, Trash2, Calendar, Users, Plane, MessageSquare, Activity, Plus, MoreVertical } from 'lucide-react';
 import { api } from '@/services/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AddFlightModal } from '../../components/AddFlightModal';
 import { format } from 'date-fns';
 import { Skeleton, SkeletonCard, SkeletonText } from '@/components/Skeleton';
 import '../bookings.css';
@@ -17,8 +18,12 @@ function BookingDetailContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const bookingId = params.id as string;
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get('tab') as Tab) || 'overview');
+  const [showAddFlightModal, setShowAddFlightModal] = useState(false);
+  const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
+  const [flightMenuOpen, setFlightMenuOpen] = useState<string | null>(null);
 
   // Fetch booking data
   const { data: booking, isLoading } = useQuery({
@@ -75,6 +80,46 @@ function BookingDetailContent() {
   const activities = activitiesData?.activities || [];
   const messages = messagesData?.messages || [];
 
+  // Delete flight mutation
+  const deleteFlightMutation = useMutation({
+    mutationFn: (flightId: string) => api.deleteFlight(flightId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['booking-flights', bookingId] });
+      setFlightMenuOpen(null);
+    },
+    onError: (error: any) => {
+      alert(error.message || 'Failed to delete flight');
+    },
+  });
+
+  const handleDeleteFlight = (flightId: string) => {
+    if (confirm('Are you sure you want to delete this flight?')) {
+      deleteFlightMutation.mutate(flightId);
+    }
+  };
+
+  const handleEditFlight = (flightId: string) => {
+    // Navigate to flight search with the flight details to allow modification
+    // For now, we'll allow deletion and re-adding, or we can add a proper edit modal
+    setFlightMenuOpen(null);
+    // Option: Navigate to flight search or open edit modal
+    router.push(`/flights/search?bookingId=${bookingId}&editFlightId=${flightId}`);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (flightMenuOpen && !(event.target as Element).closest('.flight-menu-container')) {
+        setFlightMenuOpen(null);
+      }
+    };
+
+    if (flightMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [flightMenuOpen]);
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -121,6 +166,10 @@ function BookingDetailContent() {
         { label: 'Bookings', href: '/bookings' },
         { label: booking.booking_code || bookingId },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/bookings',
+      }}
       actions={
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className="btn-secondary" onClick={() => router.push(`/bookings/${bookingId}/edit`)}>
@@ -141,10 +190,6 @@ function BookingDetailContent() {
       <div className="booking-detail">
         {/* Header */}
         <div className="booking-detail-header">
-          <button className="btn-link" onClick={() => router.push('/bookings')}>
-            <ArrowLeft size={20} />
-            Back
-          </button>
           <div className="booking-detail-title-section">
             <code className="booking-code-large">{booking.booking_code || booking.code || bookingId}</code>
             <span className={`status-badge status-${booking.status || 'draft'}`}>
@@ -291,6 +336,15 @@ function BookingDetailContent() {
 
           {activeTab === 'flights' && (
             <div className="booking-flights">
+              <div className="section-header-actions">
+                <button 
+                  className="btn-primary"
+                  onClick={() => setShowAddFlightModal(true)}
+                >
+                  <Plus size={18} />
+                  Add Flight
+                </button>
+              </div>
               {flightsLoading ? (
                 <div className="flights-list">
                   {Array.from({ length: 2 }, (_, i) => (
@@ -314,52 +368,99 @@ function BookingDetailContent() {
                 </div>
               ) : flights && flights.length > 0 ? (
                 <div className="flights-list">
-                  {flights.map((flight: any, idx: number) => (
-                    <div key={flight.id || flight.flight_id || idx} className="flight-card">
-                      <div className="flight-header">
-                        <h4>
-                          {flight.airline_name || flight.airline || 'Airline'} {flight.flight_number || ''}
-                        </h4>
-                        <span className={`status-badge status-${flight.status || 'confirmed'}`}>
-                          {flight.status || 'confirmed'}
-                        </span>
-                      </div>
-                      <div className="flight-route">
-                        <div className="flight-airport">
-                          <div className="airport-code">{flight.departure_airport || flight.origin || 'N/A'}</div>
-                          <div className="airport-time">
-                            {(flight.scheduled_departure || flight.departure_time)
-                              ? format(new Date(flight.scheduled_departure || flight.departure_time), 'MMM d, HH:mm')
-                              : 'TBD'
-                            }
+                  {flights.map((flight: any, idx: number) => {
+                    const flightId = flight.id || flight.flight_id;
+                    const isMenuOpen = flightMenuOpen === flightId;
+                    
+                    return (
+                      <div key={flightId || idx} className="flight-card">
+                        <div className="flight-header">
+                          <h4>
+                            {flight.airline_name || flight.airline || 'Airline'} {flight.flight_number || ''}
+                          </h4>
+                          <div className="flight-header-actions">
+                            <span className={`status-badge status-${flight.status || 'confirmed'}`}>
+                              {flight.status || 'confirmed'}
+                            </span>
+                            <div className="flight-menu-container">
+                              <button
+                                className="flight-menu-btn"
+                                onClick={() => setFlightMenuOpen(isMenuOpen ? null : flightId)}
+                                aria-label="Flight options"
+                              >
+                                <MoreVertical size={18} />
+                              </button>
+                              {isMenuOpen && (
+                                <div className="flight-menu-dropdown">
+                                  <button
+                                    className="flight-menu-item"
+                                    onClick={() => handleEditFlight(flightId)}
+                                  >
+                                    <Edit size={16} />
+                                    Edit Flight
+                                  </button>
+                                  <button
+                                    className="flight-menu-item flight-menu-item-danger"
+                                    onClick={() => handleDeleteFlight(flightId)}
+                                    disabled={deleteFlightMutation.isPending}
+                                  >
+                                    <Trash2 size={16} />
+                                    {deleteFlightMutation.isPending ? 'Deleting...' : 'Delete Flight'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="flight-arrow">
-                          <Plane size={20} />
-                        </div>
-                        <div className="flight-airport">
-                          <div className="airport-code">{flight.arrival_airport || flight.destination || 'N/A'}</div>
-                          <div className="airport-time">
-                            {(flight.scheduled_arrival || flight.arrival_time)
-                              ? format(new Date(flight.scheduled_arrival || flight.arrival_time), 'MMM d, HH:mm')
-                              : 'TBD'
-                            }
+                        <div className="flight-route">
+                          <div className="flight-airport">
+                            <div className="airport-code">{flight.departure_airport || flight.origin || 'N/A'}</div>
+                            <div className="airport-time">
+                              {(flight.scheduled_departure || flight.departure_time)
+                                ? format(new Date(flight.scheduled_departure || flight.departure_time), 'MMM d, HH:mm')
+                                : 'TBD'
+                              }
+                            </div>
+                          </div>
+                          <div className="flight-arrow">
+                            <Plane size={20} />
+                          </div>
+                          <div className="flight-airport">
+                            <div className="airport-code">{flight.arrival_airport || flight.destination || 'N/A'}</div>
+                            <div className="airport-time">
+                              {(flight.scheduled_arrival || flight.arrival_time)
+                                ? format(new Date(flight.scheduled_arrival || flight.arrival_time), 'MMM d, HH:mm')
+                                : 'TBD'
+                              }
+                            </div>
                           </div>
                         </div>
+                        {flight.booking_reference && (
+                          <div className="flight-pnr">
+                            <strong>PNR:</strong> <code>{flight.booking_reference}</code>
+                          </div>
+                        )}
+                        {flight.flight_type && (
+                          <div className="flight-type">
+                            <span className="flight-type-badge">{flight.flight_type}</span>
+                          </div>
+                        )}
                       </div>
-                      {flight.booking_reference && (
-                        <div className="flight-pnr">
-                          <strong>PNR:</strong> <code>{flight.booking_reference}</code>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="empty-state">
                   <Plane size={48} />
                   <h3>No flights yet</h3>
                   <p>Add flights to this booking</p>
+                  <button 
+                    className="btn-primary empty-state-action"
+                    onClick={() => setShowAddFlightModal(true)}
+                  >
+                    <Plus size={18} />
+                    Add Flight
+                  </button>
                 </div>
               )}
             </div>
@@ -518,6 +619,15 @@ function BookingDetailContent() {
           )}
         </div>
       </div>
+
+      {/* Add Flight Modal */}
+      <AddFlightModal
+        isOpen={showAddFlightModal}
+        onClose={() => setShowAddFlightModal(false)}
+        bookingId={bookingId}
+        bookingStartDate={booking.start_date}
+        bookingEndDate={booking.end_date}
+      />
     </DashboardLayout>
   );
 }

@@ -15,6 +15,10 @@ function TeamSettingsContent() {
         { label: 'Settings', href: '/settings' },
         { label: 'Team' },
       ]}
+      backButton={{
+        label: 'Back',
+        href: '/settings',
+      }}
       actions={
         <button className="btn-primary" onClick={() => router.push('/settings/team/invite')}>
           <Plus size={20} />
