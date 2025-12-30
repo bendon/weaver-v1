@@ -2,7 +2,11 @@ import type { Itinerary } from '../types';
 import { isAuthError, extractErrorMessage } from '../utils/apiErrorHandler';
 
 // Use relative URLs in development to leverage Next.js proxy, or use env variable for production
-const API_BASE_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+// In browser, use empty string to leverage Next.js rewrites, or use env variable if set
+// On server, use env variable or default to localhost:8000
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_API_URL || '') 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
 // Global auth error handler
 let onAuthError: (() => void) | null = null;

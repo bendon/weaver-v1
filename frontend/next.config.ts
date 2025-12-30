@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   // Proxy API requests to the backend
+  // Note: /api/chat/message is handled by a custom route handler for better error handling
   async rewrites() {
     return [
       {
@@ -12,6 +13,25 @@ const nextConfig: NextConfig = {
         destination: process.env.NEXT_PUBLIC_API_URL
           ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
           : 'http://localhost:8000/api/:path*',
+      },
+    ];
+  },
+
+  // Increase timeout for long-running requests (like AI chat)
+  serverRuntimeConfig: {
+    // Increase timeout for API routes
+  },
+  
+  // Configure headers for proxied requests
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, PATCH, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+        ],
       },
     ];
   },

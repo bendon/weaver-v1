@@ -7,6 +7,29 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import './AIBookingAssistantView.css';
 
+// Utility function to format date/time intelligently
+const formatConversationDate = (dateString: string | Date): string => {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  // Same day: show time
+  if (dateOnly.getTime() === today.getTime()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  // Yesterday: show "Yesterday"
+  if (dateOnly.getTime() === yesterday.getTime()) {
+    return 'Yesterday';
+  }
+  
+  // Older: show date
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+};
+
 interface AIBookingAssistantViewProps {
   conversationId?: string;
 }
@@ -206,7 +229,7 @@ export default function AIBookingAssistantView({ conversationId: propConversatio
                     <div className="follow-up-header">
                       <span className="follow-up-title">{conv.title}</span>
                       <span className="follow-up-date">
-                        {new Date(conv.follow_up_date).toLocaleDateString()}
+                        {formatConversationDate(conv.follow_up_date)}
                       </span>
                     </div>
                     {conv.follow_up_notes && (
@@ -266,7 +289,7 @@ export default function AIBookingAssistantView({ conversationId: propConversatio
                             </span>
                           )}
                           <span className="conversation-date">
-                            {new Date(conv.created_at).toLocaleDateString()}
+                            {formatConversationDate(conv.created_at)}
                           </span>
                         </div>
                       </button>
