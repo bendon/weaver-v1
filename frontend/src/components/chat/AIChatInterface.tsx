@@ -22,10 +22,156 @@ interface AIChatInterfaceProps {
   conversationId?: string | null;
 }
 
+interface StarterFormData {
+  type: 'flight' | 'trip' | 'safari' | 'beach' | 'mountain' | 'city';
+  origin?: string;
+  destination?: string;
+  departureDate?: string;
+  returnDate?: string;
+  passengers?: number;
+  duration?: number;
+}
+
+interface StarterFormModalProps {
+  formData: StarterFormData;
+  onSubmit: (data: StarterFormData) => void;
+  onClose: () => void;
+}
+
+const StarterFormModal: React.FC<StarterFormModalProps> = ({ formData, onSubmit, onClose }) => {
+  const [localData, setLocalData] = useState<StarterFormData>(formData);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(localData);
+  };
+
+  const updateField = (field: keyof StarterFormData, value: any) => {
+    setLocalData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const formConfig: Record<StarterFormData['type'], { title: string; icon: string; fields: Array<keyof StarterFormData> }> = {
+    flight: {
+      title: 'Book a Flight',
+      icon: '✈️',
+      fields: ['origin', 'destination', 'departureDate', 'returnDate', 'passengers']
+    },
+    trip: {
+      title: 'Plan a Trip',
+      icon: '🏨',
+      fields: ['destination', 'departureDate', 'duration', 'passengers']
+    },
+    safari: {
+      title: 'Safari Adventure',
+      icon: '🎯',
+      fields: ['departureDate', 'duration', 'passengers']
+    },
+    beach: {
+      title: 'Beach Getaway',
+      icon: '🌴',
+      fields: ['destination', 'departureDate', 'duration', 'passengers']
+    },
+    mountain: {
+      title: 'Mountain Retreat',
+      icon: '🎿',
+      fields: ['destination', 'departureDate', 'passengers']
+    },
+    city: {
+      title: 'City Break',
+      icon: '🗼',
+      fields: ['destination', 'departureDate', 'passengers']
+    }
+  };
+
+  const config = formConfig[formData.type];
+
+  const fieldLabels: Record<string, string> = {
+    origin: 'From (City or Airport)',
+    destination: 'To (Destination)',
+    departureDate: 'Departure Date',
+    returnDate: 'Return Date (optional)',
+    passengers: 'Number of Passengers',
+    duration: 'Duration (nights)'
+  };
+
+  const fieldPlaceholders: Record<string, string> = {
+    origin: 'e.g., New York',
+    destination: formData.type === 'beach' ? 'e.g., Maldives' : formData.type === 'mountain' ? 'e.g., Swiss Alps' : 'e.g., Paris',
+    departureDate: '',
+    returnDate: '',
+    passengers: '2',
+    duration: '5'
+  };
+
+  return (
+    <div className="starter-form-overlay" onClick={onClose}>
+      <div className="starter-form-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="starter-form-header">
+          <div className="starter-form-title">
+            <span className="starter-form-icon">{config.icon}</span>
+            <h3>{config.title}</h3>
+          </div>
+          <button onClick={onClose} className="starter-form-close" type="button">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="starter-form-content">
+          {config.fields.map((field) => (
+            <div key={field} className="form-field">
+              <label htmlFor={field}>{fieldLabels[field]}</label>
+              {field === 'departureDate' || field === 'returnDate' ? (
+                <input
+                  type="date"
+                  id={field}
+                  value={localData[field] || ''}
+                  onChange={(e) => updateField(field, e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="form-input"
+                />
+              ) : field === 'passengers' || field === 'duration' ? (
+                <input
+                  type="number"
+                  id={field}
+                  value={localData[field] || ''}
+                  onChange={(e) => updateField(field, parseInt(e.target.value) || '')}
+                  min="1"
+                  placeholder={fieldPlaceholders[field]}
+                  className="form-input"
+                />
+              ) : (
+                <input
+                  type="text"
+                  id={field}
+                  value={localData[field] || ''}
+                  onChange={(e) => updateField(field, e.target.value)}
+                  placeholder={fieldPlaceholders[field]}
+                  className="form-input"
+                />
+              )}
+            </div>
+          ))}
+
+          <div className="starter-form-actions">
+            <button type="button" onClick={onClose} className="form-btn form-btn-cancel">
+              Cancel
+            </button>
+            <button type="submit" className="form-btn form-btn-submit">
+              <Send size={16} />
+              Create Booking Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreated, onClose, conversationId: propConversationId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(propConversationId || null);
+  const [showStarterForm, setShowStarterForm] = useState<StarterFormData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -136,42 +282,73 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
     }
   };
 
-  const handleStarterPrompt = (prompt: string) => {
+  const handleStarterPromptClick = (type: StarterFormData['type']) => {
+    setShowStarterForm({ type });
+  };
+
+  const handleStarterFormSubmit = (formData: StarterFormData) => {
+    let prompt = '';
+
+    switch (formData.type) {
+      case 'flight':
+        prompt = `I need to book a flight from ${formData.origin || '[origin]'} to ${formData.destination || '[destination]'}`;
+        if (formData.departureDate) prompt += ` departing on ${formData.departureDate}`;
+        if (formData.returnDate) prompt += ` and returning on ${formData.returnDate}`;
+        if (formData.passengers) prompt += ` for ${formData.passengers} passenger${formData.passengers > 1 ? 's' : ''}`;
+        break;
+
+      case 'trip':
+        prompt = `Plan a ${formData.duration || 5}-day vacation to ${formData.destination || '[destination]'}`;
+        if (formData.departureDate) prompt += ` starting ${formData.departureDate}`;
+        if (formData.passengers) prompt += ` for ${formData.passengers} traveler${formData.passengers > 1 ? 's' : ''}`;
+        break;
+
+      case 'safari':
+        prompt = `Create a Kenya safari booking`;
+        if (formData.duration) prompt += ` for ${formData.duration} days`;
+        if (formData.passengers) prompt += ` for ${formData.passengers} people`;
+        if (formData.departureDate) prompt += ` starting ${formData.departureDate}`;
+        break;
+
+      case 'beach':
+        prompt = `I want to book a beach resort in ${formData.destination || 'Maldives'}`;
+        if (formData.duration) prompt += ` for ${formData.duration} days`;
+        if (formData.passengers) prompt += ` for ${formData.passengers} people`;
+        if (formData.departureDate) prompt += ` starting ${formData.departureDate}`;
+        break;
+
+      case 'mountain':
+        prompt = `Plan a ski trip to ${formData.destination || 'the Alps'}`;
+        if (formData.passengers) prompt += ` for ${formData.passengers} people`;
+        if (formData.departureDate) prompt += ` starting ${formData.departureDate}`;
+        break;
+
+      case 'city':
+        prompt = `Book a weekend city break to ${formData.destination || 'Paris'}`;
+        if (formData.passengers) prompt += ` for ${formData.passengers} people`;
+        if (formData.departureDate) prompt += ` starting ${formData.departureDate}`;
+        break;
+    }
+
     setInput(prompt);
+    setShowStarterForm(null);
     inputRef.current?.focus();
+
+    // Auto-submit the message
+    setTimeout(() => {
+      if (prompt.trim()) {
+        sendMessageMutation.mutate(prompt);
+      }
+    }, 100);
   };
 
   const starterPrompts = [
-    {
-      icon: '✈️',
-      title: 'Book a Flight',
-      prompt: 'I need to book a flight from New York to London in March for 2 people'
-    },
-    {
-      icon: '🏨',
-      title: 'Plan a Trip',
-      prompt: 'Plan a 5-day vacation to Tokyo in April for 2 travelers'
-    },
-    {
-      icon: '🎯',
-      title: 'Safari Adventure',
-      prompt: 'Create a Kenya safari booking for 4 people in June'
-    },
-    {
-      icon: '🌴',
-      title: 'Beach Getaway',
-      prompt: 'I want to book a beach resort in Maldives for 2 weeks in July'
-    },
-    {
-      icon: '🎿',
-      title: 'Mountain Retreat',
-      prompt: 'Plan a ski trip to the Alps for 3 people in February'
-    },
-    {
-      icon: '🗼',
-      title: 'City Break',
-      prompt: 'Book a weekend city break to Paris for 2 people next month'
-    }
+    { icon: '✈️', title: 'Book a Flight', type: 'flight' as const },
+    { icon: '🏨', title: 'Plan a Trip', type: 'trip' as const },
+    { icon: '🎯', title: 'Safari Adventure', type: 'safari' as const },
+    { icon: '🌴', title: 'Beach Getaway', type: 'beach' as const },
+    { icon: '🎿', title: 'Mountain Retreat', type: 'mountain' as const },
+    { icon: '🗼', title: 'City Break', type: 'city' as const }
   ];
 
   const showStarterPrompts = messages.length === 1 && messages[0].id === 'welcome';
@@ -254,7 +431,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
                 <button
                   key={idx}
                   className="starter-prompt-card"
-                  onClick={() => handleStarterPrompt(prompt.prompt)}
+                  onClick={() => handleStarterPromptClick(prompt.type)}
                   type="button"
                 >
                   <div className="starter-prompt-icon">{prompt.icon}</div>
@@ -263,6 +440,15 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
               ))}
             </div>
           </div>
+        )}
+
+        {/* Starter Form Modal */}
+        {showStarterForm && (
+          <StarterFormModal
+            formData={showStarterForm}
+            onSubmit={handleStarterFormSubmit}
+            onClose={() => setShowStarterForm(null)}
+          />
         )}
 
         {sendMessageMutation.isPending && (
