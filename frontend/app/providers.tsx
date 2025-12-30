@@ -6,7 +6,7 @@ import { BookingFlowProvider } from '@/contexts/BookingFlowContext';
 import { APIStatus } from '@/components/APIStatus';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -35,6 +35,62 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       })
   );
+
+  // Fix CSS hot reload in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+      // Force CSS reload on HMR updates
+      const reloadCSS = () => {
+        const links = document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]');
+        links.forEach((link) => {
+          const href = link.href;
+          if (href && !href.includes('fonts.googleapis.com')) {
+            // Remove existing _hmr parameter if present
+            const url = new URL(href);
+            url.searchParams.delete('_hmr');
+            // Add new cache-busting parameter
+            url.searchParams.set('_hmr', Date.now().toString());
+            link.href = url.toString();
+          }
+        });
+      };
+
+      // Listen for Next.js HMR events via custom event
+      const handleHMR = () => {
+        // Small delay to ensure CSS files are updated
+        setTimeout(reloadCSS, 50);
+      };
+
+      // Listen for Next.js HMR custom events
+      window.addEventListener('next-hmr', handleHMR);
+      
+      // Also reload CSS when the page becomes visible (after HMR)
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          setTimeout(reloadCSS, 100);
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      // Periodic check for CSS updates (fallback)
+      const checkInterval = setInterval(() => {
+        // Check if any stylesheet links have been updated
+        const links = document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]');
+        links.forEach((link) => {
+          if (link.href && !link.href.includes('fonts.googleapis.com') && !link.href.includes('_hmr=')) {
+            // CSS file without cache-busting, might need reload
+            reloadCSS();
+          }
+        });
+      }, 1000);
+
+      return () => {
+        window.removeEventListener('next-hmr', handleHMR);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        clearInterval(checkInterval);
+      };
+    }
+  }, []);
 
   return (
     <ErrorBoundary>

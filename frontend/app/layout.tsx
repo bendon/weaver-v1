@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { Providers } from './providers';
+// Import CSS - must be at the top level for proper HMR
 import '../src/index.css';
 
 export const metadata: Metadata = {

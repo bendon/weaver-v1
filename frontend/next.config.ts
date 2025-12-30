@@ -16,13 +16,24 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Webpack configuration for module aliases
-  webpack: (config) => {
+  // Webpack configuration for module aliases and CSS handling
+  webpack: (config, { dev, isServer }) => {
     // Alias react-router-dom to our compatibility layer
     config.resolve.alias = {
       ...config.resolve.alias,
       'react-router-dom': path.resolve(__dirname, 'src/lib/router-compat.tsx'),
     };
+
+    // Improve CSS hot reload in development
+    if (dev && !isServer) {
+      // Ensure CSS files are properly tracked for HMR
+      // This helps with CSS hot module replacement
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'named',
+      };
+    }
+
     return config;
   },
 
