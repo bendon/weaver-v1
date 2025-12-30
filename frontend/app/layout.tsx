@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import { Providers } from './providers';
 import '../src/index.css';
 
@@ -25,8 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={GeistSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>
