@@ -5,6 +5,10 @@ Core configuration for TravelWeaver Platform
 import os
 from typing import Optional
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -15,8 +19,6 @@ class Settings(BaseSettings):
     APP_VERSION: str = "2.0.0"
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me-in-production")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
-    
-    model_config = {"extra": "ignore"}  # Ignore extra env vars
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data/travelweaver.db")

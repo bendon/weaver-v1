@@ -2,6 +2,11 @@
 Main FastAPI application for TravelWeaver Platform
 """
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
@@ -14,7 +19,8 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
+    redirect_slashes=False  # Disable automatic trailing slash redirects
 )
 
 # CORS middleware
@@ -59,7 +65,7 @@ async def health():
 # Import and include routers
 from app.api.routes import auth, bookings, travelers, flights, chat, public, webhooks
 from app.api.routes import flights_extended, hotels, transfers, activities
-from app.api.routes import itineraries, messages, automation
+from app.api.routes import itineraries, messages, automation, airports
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(bookings.router, prefix="/api/bookings", tags=["Bookings"])
@@ -72,6 +78,7 @@ app.include_router(flights_extended.router, prefix="/api", tags=["Flights Extend
 app.include_router(itineraries.router, prefix="/api/itineraries", tags=["Itineraries"])
 app.include_router(messages.router, prefix="/api/messages", tags=["Messages"])
 app.include_router(automation.router, prefix="/api/automation", tags=["Automation"])
+app.include_router(airports.router, prefix="/api/airports", tags=["Airports"])
 app.include_router(hotels.router, prefix="/api/hotels", tags=["Hotels"])
 app.include_router(transfers.router, prefix="/api/transfers", tags=["Transfers"])
 app.include_router(activities.router, prefix="/api/activities", tags=["Activities"])

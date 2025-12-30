@@ -25,19 +25,49 @@ def get_db_path() -> Path:
     return db_path
 
 
-def get_connection():
-    """Get database connection"""
+def get_connection(timeout: float = 5.0):
+    """Get database connection with timeout to handle locking"""
     db_path = get_db_path()
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(str(db_path), timeout=timeout)
     conn.row_factory = sqlite3.Row
     # Enable foreign keys
     conn.execute("PRAGMA foreign_keys = ON")
+    # Set busy timeout to handle concurrent access
+    conn.execute("PRAGMA busy_timeout = 3000")  # 3 seconds
     return conn
 
 
 def generate_id() -> str:
     """Generate a random lowercase hex ID"""
     return secrets.token_hex(8)
+
+
+def seed_airports(cursor):
+    """Seed airports table from JSON file"""
+    try:
+        airports_file = Path(__file__).parent.parent / "data" / "airports.json"
+        if not airports_file.exists():
+            print(f"Warning: airports.json not found at {airports_file}")
+            return
+        
+        with open(airports_file, 'r', encoding='utf-8') as f:
+            airports = json.load(f)
+        
+        for airport in airports:
+            cursor.execute("""
+                INSERT OR REPLACE INTO airports (
+                    iata_code, name, city, country
+                ) VALUES (?, ?, ?, ?)
+            """, (
+                airport.get('iata_code'),
+                airport.get('name'),
+                airport.get('city'),
+                airport.get('country')
+            ))
+        
+        print(f"Seeded {len(airports)} airports from airports.json")
+    except Exception as e:
+        print(f"Error seeding airports: {e}")
 
 
 def init_database():
@@ -362,11 +392,34 @@ def init_database():
             user_id TEXT REFERENCES users(id),
             booking_id TEXT REFERENCES bookings(id),
             conversation_type TEXT DEFAULT 'booking',
+            title TEXT DEFAULT 'New Conversation',
             status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'abandoned')),
+            stage TEXT DEFAULT 'lead' CHECK (stage IN ('lead', 'qualified', 'booking_in_progress', 'booking_completed', 'no_sale', 'follow_up_scheduled')),
+            outcome TEXT CHECK (outcome IN ('booked', 'declined', 'needs_info', 'no_response', 'follow_up', NULL)),
+            follow_up_date TEXT,
+            follow_up_notes TEXT,
+            tags TEXT,
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
+
+    # Migrations for existing databases (add new columns if they don't exist)
+    migrations = [
+        ("title", "TEXT DEFAULT 'New Conversation'"),
+        ("stage", "TEXT DEFAULT 'lead'"),
+        ("outcome", "TEXT"),
+        ("follow_up_date", "TEXT"),
+        ("follow_up_notes", "TEXT"),
+        ("tags", "TEXT"),
+    ]
+
+    for column_name, column_def in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE conversations ADD COLUMN {column_name} {column_def}")
+        except sqlite3.OperationalError:
+            # Column already exists, ignore
+            pass
     
     # ============================================================
     # AI CONVERSATION MESSAGES
@@ -379,10 +432,19 @@ def init_database():
             content TEXT NOT NULL,
             tool_calls TEXT,
             tool_results TEXT,
+            tool_call_id TEXT,
             tokens_used INTEGER,
             created_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    
+    # Add tool_call_id column if it doesn't exist (migration for existing databases)
+    try:
+        cursor.execute("SELECT tool_call_id FROM conversation_messages LIMIT 1")
+    except sqlite3.OperationalError:
+        # Column doesn't exist, add it
+        cursor.execute("ALTER TABLE conversation_messages ADD COLUMN tool_call_id TEXT")
+        print("Added tool_call_id column to conversation_messages table")
     
     # ============================================================
     # REFERENCE DATA CACHE
@@ -438,10 +500,21 @@ def init_database():
         "CREATE INDEX IF NOT EXISTS idx_automation_rules_org ON automation_rules(organization_id)",
         "CREATE INDEX IF NOT EXISTS idx_conversations_org ON conversations(organization_id)",
         "CREATE INDEX IF NOT EXISTS idx_conversation_messages_conv ON conversation_messages(conversation_id)",
+        "CREATE INDEX IF NOT EXISTS idx_airports_city ON airports(city)",
+        "CREATE INDEX IF NOT EXISTS idx_airports_name ON airports(name)",
+        "CREATE INDEX IF NOT EXISTS idx_airports_country ON airports(country)",
     ]
     
     for index_sql in indexes:
         cursor.execute(index_sql)
+    
+    # Seed airports from JSON file if table is empty
+    cursor.execute("SELECT COUNT(*) as count FROM airports")
+    airport_count = cursor.fetchone()[0]
+    if airport_count == 0:
+        seed_airports(cursor)
+    
+    conn.commit()
     
     # ============================================================
     # CREATE VIEWS
@@ -787,20 +860,66 @@ def get_bookings_by_organization(organization_id: str, status: Optional[str] = N
 def link_traveler_to_booking(booking_id: str, traveler_id: str, is_primary: bool = False) -> Optional[str]:
     """Link a traveler to a booking"""
     import secrets
-    link_id = f"bt_{secrets.token_hex(8)}"
     
     try:
         conn = get_connection()
         cursor = conn.cursor()
+        
+        # Validate that booking exists
+        cursor.execute("SELECT id FROM bookings WHERE id = ?", (booking_id,))
+        if not cursor.fetchone():
+            conn.close()
+            print(f"Error linking traveler to booking: Booking {booking_id} not found")
+            return None
+        
+        # Validate that traveler exists
+        cursor.execute("SELECT id FROM travelers WHERE id = ?", (traveler_id,))
+        if not cursor.fetchone():
+            conn.close()
+            print(f"Error linking traveler to booking: Traveler {traveler_id} not found")
+            return None
+        
+        # Check if link already exists
         cursor.execute("""
-            INSERT INTO booking_travelers (id, booking_id, traveler_id, is_primary)
-            VALUES (?, ?, ?, ?)
-        """, (link_id, booking_id, traveler_id, 1 if is_primary else 0))
+            SELECT id FROM booking_travelers 
+            WHERE booking_id = ? AND traveler_id = ?
+        """, (booking_id, traveler_id))
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Update existing link
+            link_id = existing['id']
+            cursor.execute("""
+                UPDATE booking_travelers 
+                SET is_primary = ?
+                WHERE id = ?
+            """, (1 if is_primary else 0, link_id))
+        else:
+            # Create new link
+            link_id = f"bt_{secrets.token_hex(8)}"
+            cursor.execute("""
+                INSERT INTO booking_travelers (id, booking_id, traveler_id, is_primary)
+                VALUES (?, ?, ?, ?)
+            """, (link_id, booking_id, traveler_id, 1 if is_primary else 0))
+        
         conn.commit()
         conn.close()
         return link_id
+    except sqlite3.IntegrityError as e:
+        print(f"Error linking traveler to booking (integrity): {e}")
+        try:
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
+        return None
     except Exception as e:
         print(f"Error linking traveler to booking: {e}")
+        try:
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
         return None
 
 
@@ -1385,4 +1504,161 @@ def delete_booking(booking_id: str) -> bool:
     except Exception as e:
         print(f"Error deleting booking: {e}")
         return False
+
+
+# ============================================================
+# CONVERSATIONS (AI Chat)
+# ============================================================
+
+def create_conversation(
+    organization_id: str,
+    user_id: Optional[str] = None,
+    booking_id: Optional[str] = None,
+    conversation_type: str = "booking"
+) -> str:
+    """Create a new conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        conversation_id = generate_id()
+
+        cursor.execute("""
+            INSERT INTO conversations (
+                id, organization_id, user_id, booking_id, conversation_type, status
+            ) VALUES (?, ?, ?, ?, ?, 'active')
+        """, (conversation_id, organization_id, user_id, booking_id, conversation_type))
+
+        conn.commit()
+        conn.close()
+        return conversation_id
+    except Exception as e:
+        print(f"Error creating conversation: {e}")
+        return None
+
+
+def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
+    """Get conversation by ID"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM conversations WHERE id = ?", (conversation_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
+    except Exception as e:
+        print(f"Error getting conversation: {e}")
+        return None
+
+
+def get_conversations_by_user(user_id: str, organization_id: str) -> List[Dict[str, Any]]:
+    """Get all conversations for a user"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM conversations
+            WHERE user_id = ? AND organization_id = ?
+            ORDER BY updated_at DESC
+        """, (user_id, organization_id))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"Error getting conversations: {e}")
+        return []
+
+
+def update_conversation(conversation_id: str, **kwargs) -> bool:
+    """Update conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        updates = []
+        values = []
+        for key, value in kwargs.items():
+            if value is not None:
+                updates.append(f"{key} = ?")
+                values.append(value)
+
+        if not updates:
+            return False
+
+        values.append(conversation_id)
+        cursor.execute(f"""
+            UPDATE conversations
+            SET {', '.join(updates)}, updated_at = datetime('now')
+            WHERE id = ?
+        """, values)
+        conn.commit()
+        conn.close()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating conversation: {e}")
+        return False
+
+
+def add_conversation_message(
+    conversation_id: str,
+    role: str,
+    content: str,
+    tool_calls: Optional[List[Dict[str, Any]]] = None,
+    tool_call_id: Optional[str] = None
+) -> str:
+    """Add a message to a conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        message_id = generate_id()
+
+        tool_calls_json = json.dumps(tool_calls) if tool_calls else None
+
+        cursor.execute("""
+            INSERT INTO conversation_messages (
+                id, conversation_id, role, content, tool_calls, tool_call_id
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        """, (message_id, conversation_id, role, content, tool_calls_json, tool_call_id))
+
+        # Update conversation's updated_at timestamp
+        cursor.execute("""
+            UPDATE conversations
+            SET updated_at = datetime('now')
+            WHERE id = ?
+        """, (conversation_id,))
+
+        conn.commit()
+        conn.close()
+        return message_id
+    except Exception as e:
+        print(f"Error adding conversation message: {e}")
+        return None
+
+
+def get_conversation_messages(conversation_id: str) -> List[Dict[str, Any]]:
+    """Get all messages in a conversation"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM conversation_messages
+            WHERE conversation_id = ?
+            ORDER BY created_at ASC
+        """, (conversation_id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        messages = []
+        for row in rows:
+            msg = dict(row)
+            if msg.get('tool_calls'):
+                try:
+                    msg['tool_calls'] = json.loads(msg['tool_calls'])
+                except:
+                    msg['tool_calls'] = None
+            messages.append(msg)
+
+        return messages
+    except Exception as e:
+        print(f"Error getting conversation messages: {e}")
+        return []
 

@@ -11,13 +11,17 @@ from app.core.database import get_connection
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 async def get_messages(
     booking_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """Get all messages for organization"""
     try:
+        # Validate user
+        if not current_user or not current_user.get('organization_id'):
+            raise HTTPException(status_code=401, detail="Invalid user or organization")
+        
         conn = get_connection()
         cursor = conn.cursor()
         
@@ -37,6 +41,9 @@ async def get_messages(
         rows = cursor.fetchall()
         conn.close()
         return {"messages": [dict(row) for row in rows], "total": len(rows)}
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error getting messages: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

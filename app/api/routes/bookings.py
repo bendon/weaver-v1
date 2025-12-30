@@ -151,6 +151,8 @@ async def link_traveler_to_booking_endpoint(
     current_user: dict = Depends(get_current_user)
 ):
     """Link a traveler to a booking"""
+    from app.core.database import get_traveler_by_id
+    
     booking = get_booking_by_id(booking_id)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
@@ -159,9 +161,20 @@ async def link_traveler_to_booking_endpoint(
     if booking['organization_id'] != current_user['organization_id']:
         raise HTTPException(status_code=403, detail="Access denied")
     
+    # Validate traveler exists and belongs to same organization
+    traveler = get_traveler_by_id(request.traveler_id)
+    if not traveler:
+        raise HTTPException(status_code=404, detail="Traveler not found")
+    
+    if traveler['organization_id'] != current_user['organization_id']:
+        raise HTTPException(status_code=403, detail="Traveler does not belong to your organization")
+    
     link_id = link_traveler_to_booking(booking_id, request.traveler_id, request.is_primary)
     if not link_id:
-        raise HTTPException(status_code=500, detail="Failed to link traveler")
+        raise HTTPException(
+            status_code=500, 
+            detail="Failed to link traveler. The traveler or booking may not exist, or the link may already exist."
+        )
     
     return {"success": True, "link_id": link_id}
 

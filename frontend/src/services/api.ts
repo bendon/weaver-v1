@@ -1,8 +1,12 @@
 import type { Itinerary } from '../types';
 import { isAuthError, extractErrorMessage } from '../utils/apiErrorHandler';
 
-// Use relative URLs in development to leverage Vite proxy, or use env variable for production
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'http://localhost:8000');
+// Use relative URLs in development to leverage Next.js proxy, or use env variable for production
+// In browser, use empty string to leverage Next.js rewrites, or use env variable if set
+// On server, use env variable or default to localhost:8000
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_API_URL || '') 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
 // Global auth error handler
 let onAuthError: (() => void) | null = null;
@@ -491,9 +495,7 @@ export const api = {
   async searchAirports(request: AirportSearchRequest): Promise<{ data: Array<{ iataCode: string; name: string; cityName: string; countryCode: string }> }> {
     const response = await fetch(`${API_BASE_URL}/api/airports/search`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(), // Include auth token
       body: JSON.stringify(request),
     });
     if (!response.ok) {
@@ -1180,15 +1182,46 @@ export const api = {
       result?: any;
     }>;
   }> {
-    const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ 
-        message,
-        conversation_id: conversation_id || null 
-      }),
+    const url = `${API_BASE_URL}/api/chat/message`;
+    const payload = { 
+      message,
+      conversation_id: conversation_id || null 
+    };
+    
+    console.log('sendChatMessage - Making request:', {
+      url,
+      API_BASE_URL,
+      payload,
+      hasAuthToken: !!getAuthToken()
     });
-    return handleApiResponse(response);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: createHeaders(),
+        body: JSON.stringify(payload),
+      });
+      
+      console.log('sendChatMessage - Response status:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('sendChatMessage - Error response:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        } catch (e) {
+          throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+      
+      const data = await response.json();
+      console.log('sendChatMessage - Success:', data);
+      return data;
+    } catch (error: any) {
+      console.error('sendChatMessage - Exception:', error);
+      throw error;
+    }
   },
 
   /**
@@ -1224,10 +1257,42 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/chat/conversations`, {
       method: 'POST',
       headers: createHeaders(),
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         message: message || 'Start new conversation',
-        conversation_id: null 
+        conversation_id: null
       }),
+    });
+    return handleApiResponse(response);
+  },
+
+  /**
+   * AI Chat: Update conversation (stage, outcome, follow-up)
+   * PATCH /api/chat/conversations/{conversation_id}
+   */
+  async updateConversation(conversationId: string, updates: {
+    stage?: string;
+    outcome?: string;
+    status?: string;
+    follow_up_date?: string;
+    follow_up_notes?: string;
+    tags?: string;
+  }): Promise<{ success: boolean; message: string; conversation: any }> {
+    const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}`, {
+      method: 'PATCH',
+      headers: createHeaders(),
+      body: JSON.stringify(updates),
+    });
+    return handleApiResponse(response);
+  },
+
+  /**
+   * AI Chat: Delete conversation
+   * DELETE /api/chat/conversations/{conversation_id}
+   */
+  async deleteConversation(conversationId: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}`, {
+      method: 'DELETE',
+      headers: createHeaders(),
     });
     return handleApiResponse(response);
   },
@@ -1336,6 +1401,16 @@ export const api = {
       // Fallback: return mock data
       return getMockItinerary();
     }
+  },
+
+  /**
+   * PNR: Parse PNR text
+   * Note: This endpoint may not be implemented yet
+   */
+  async parsePNR(booking_id: string, pnr_text: string, token: string): Promise<any> {
+    // Placeholder implementation
+    console.warn('parsePNR not implemented yet');
+    throw new Error('PNR parsing not implemented');
   },
 };
 

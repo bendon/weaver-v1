@@ -373,7 +373,7 @@ export const TravelWeaverDashboard: React.FC = () => {
                     ⚠️ API Error: {bookingsError?.message || flightsError?.message || 'Failed to load data'}
                   </p>
                   <p className="text-xs text-red-600 mt-1">
-                    Check the browser console for more details. Make sure the backend API is running at {import.meta.env.VITE_API_URL || 'http://localhost:8000'}
+                    Check the browser console for more details. Make sure the backend API is running at {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
                   </p>
                 </div>
               )}
