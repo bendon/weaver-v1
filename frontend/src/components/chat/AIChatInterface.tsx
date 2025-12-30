@@ -303,7 +303,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
               setMessages([{
                 id: 'welcome',
                 role: 'assistant',
-                content: '👋 Continuing our conversation. How can I help you with your booking?',
+                content: 'Continuing our conversation. How can I help you with your booking?',
                 timestamp: new Date(),
               }]);
             }
@@ -312,7 +312,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
             setMessages([{
               id: 'welcome',
               role: 'assistant',
-              content: '👋 Continuing our conversation. How can I help you with your booking?',
+              content: 'Continuing our conversation. How can I help you with your booking?',
               timestamp: new Date(),
             }]);
           }

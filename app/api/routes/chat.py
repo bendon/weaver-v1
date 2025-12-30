@@ -114,12 +114,12 @@ def generate_conversation_title(message: str, booking_id: Optional[str] = None) 
     
     # Build title based on type
     if 'flight' in message_lower or origin or destination:
-        title_parts = ['✈️']
+        title_parts = []
         if origin and destination:
             # Shorten city names if too long
             origin_short = origin.split()[0] if len(origin) > 15 else origin
             dest_short = destination.split()[0] if len(destination) > 15 else destination
-            title_parts.append(f"{origin_short.title()} → {dest_short.title()}")
+            title_parts.append(f"Flight: {origin_short.title()} → {dest_short.title()}")
         else:
             title_parts.append('Flight Booking')
         
@@ -143,16 +143,16 @@ def generate_conversation_title(message: str, booking_id: Optional[str] = None) 
         return ' '.join(title_parts)
     
     elif 'hotel' in message_lower:
-        title_parts = ['🏨 Hotel']
+        title_parts = ['Hotel']
         if destination:
             dest_short = destination.split()[0] if len(destination) > 15 else destination
             title_parts.append(dest_short.title())
         if passengers:
             title_parts.append(f"({passengers} pax)")
-        return ' '.join(title_parts) if len(title_parts) > 1 else '🏨 Hotel Reservation'
+        return ' '.join(title_parts) if len(title_parts) > 1 else 'Hotel Reservation'
     
     elif 'safari' in message_lower or 'kenya' in message_lower:
-        title_parts = ['🦁 Safari']
+        title_parts = ['Safari']
         if passengers:
             title_parts.append(f"({passengers} pax)")
         if departure_date:
@@ -162,34 +162,34 @@ def generate_conversation_title(message: str, booking_id: Optional[str] = None) 
                     title_parts.append(date_obj.strftime('%b %d'))
             except:
                 pass
-        return ' '.join(title_parts) if len(title_parts) > 1 else '🦁 Safari Adventure'
+        return ' '.join(title_parts) if len(title_parts) > 1 else 'Safari Adventure'
     
     elif 'beach' in message_lower or 'maldives' in message_lower or 'resort' in message_lower:
-        title_parts = ['🏖️ Beach']
+        title_parts = ['Beach']
         if destination:
             dest_short = destination.split()[0] if len(destination) > 15 else destination
             title_parts.append(dest_short.title())
         if passengers:
             title_parts.append(f"({passengers} pax)")
-        return ' '.join(title_parts) if len(title_parts) > 1 else '🏖️ Beach Getaway'
+        return ' '.join(title_parts) if len(title_parts) > 1 else 'Beach Getaway'
     
     elif 'trip' in message_lower or 'vacation' in message_lower or 'travel' in message_lower:
-        title_parts = ['✈️']
+        title_parts = ['Trip']
         if destination:
             dest_short = destination.split()[0] if len(destination) > 20 else destination
-            title_parts.append(dest_short.title())
+            title_parts.append(f"to {dest_short.title()}")
         elif origin:
             origin_short = origin.split()[0] if len(origin) > 20 else origin
-            title_parts.append(origin_short.title())
+            title_parts.append(f"from {origin_short.title()}")
         else:
             # Extract first few meaningful words
             words = [w for w in message.split()[:6] if w.lower() not in ['i', 'need', 'want', 'book', 'a', 'an', 'the', 'to', 'for']]
             if words:
                 truncated = ' '.join(words[:4])
-                title_parts.append(truncated.capitalize())
+                title_parts.append(f"- {truncated.capitalize()}")
         if passengers:
             title_parts.append(f"({passengers} pax)")
-        return ' '.join(title_parts) if len(title_parts) > 1 else '✈️ Trip Planning'
+        return ' '.join(title_parts) if len(title_parts) > 1 else 'Trip Planning'
 
     # Default: use first meaningful words (skip common words)
     words = message.split()

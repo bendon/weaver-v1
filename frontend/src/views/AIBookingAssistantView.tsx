@@ -48,11 +48,11 @@ const STAGE_CONFIG: Record<Stage, { label: string; color: string; icon: any }> =
 };
 
 const OUTCOME_OPTIONS: { value: Outcome; label: string }[] = [
-  { value: 'booked', label: '✅ Booked' },
-  { value: 'declined', label: '❌ Declined' },
-  { value: 'needs_info', label: '📋 Needs Info' },
-  { value: 'no_response', label: '🔇 No Response' },
-  { value: 'follow_up', label: '📅 Follow-up' },
+  { value: 'booked', label: 'Booked' },
+  { value: 'declined', label: 'Declined' },
+  { value: 'needs_info', label: 'Needs Info' },
+  { value: 'no_response', label: 'No Response' },
+  { value: 'follow_up', label: 'Follow-up' },
 ];
 
 export default function AIBookingAssistantView({ conversationId: propConversationId }: AIBookingAssistantViewProps = {}) {
