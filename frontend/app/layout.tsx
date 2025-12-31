@@ -3,7 +3,8 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { Providers } from './providers';
 // Import CSS - must be at the top level for proper HMR
-import '../src/index.css';
+import '../src/index.css'; // Legacy styles (being phased out)
+import '../src/styles/globals-new.css'; // New Figma design system
 
 export const metadata: Metadata = {
   title: 'Travel Assistant - Itinerary Planner',
@@ -30,10 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap"
-          rel="stylesheet"
-        />
+        {/* Fonts are now loaded via @import in globals-new.css for better performance */}
       </head>
       <body className={GeistSans.className}>
         <Providers>{children}</Providers>
