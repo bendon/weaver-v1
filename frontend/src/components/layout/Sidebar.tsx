@@ -32,7 +32,8 @@ export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const navItems: NavItem[] = [
-    { label: 'AI Assistant', href: '/', icon: Sparkles },
+    // DISABLED V1 AI Assistant - Use V2 WeaverAssistant at /v2/dmc/ai-assistant instead
+    // { label: 'AI Assistant', href: '/', icon: Sparkles },
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Bookings', href: '/bookings', icon: Calendar },
     { label: 'Travelers', href: '/travelers', icon: Users },
