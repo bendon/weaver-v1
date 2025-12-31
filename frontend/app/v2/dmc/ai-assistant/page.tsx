@@ -4,6 +4,30 @@ import { Send, Sparkles, User, Bot, Plus, Search, MoreVertical, Calendar, Tag, C
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/v2/lib/api'
 
+// Client-side only time formatter to avoid hydration mismatches
+function formatTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  const hours = d.getHours()
+  const minutes = d.getMinutes()
+  const ampm = hours >= 12 ? 'PM' : 'AM'
+  const displayHours = hours % 12 || 12
+  const displayMinutes = minutes.toString().padStart(2, '0')
+  return `${displayHours}:${displayMinutes} ${ampm}`
+}
+
+// Client-side only component for displaying current time
+function CurrentTime() {
+  const [time, setTime] = useState<string>('')
+
+  useEffect(() => {
+    // Only set time on client side
+    setTime(formatTime(new Date()))
+  }, [])
+
+  if (!time) return null
+  return <>{time}</>
+}
+
 interface Conversation {
   conversation_id: string
   title?: string
@@ -33,6 +57,7 @@ export default function AIAssistantPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingMessages, setLoadingMessages] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch conversations on mount
@@ -64,7 +89,12 @@ export default function AIAssistantPage() {
     try {
       const response = await apiClient.conversations.list()
       if (response.success && response.data) {
-        setConversations(response.data)
+        // Normalize conversation data: map 'id' to 'conversation_id' if needed
+        const normalizedConversations = response.data.map((conv: any) => ({
+          ...conv,
+          conversation_id: conv.conversation_id || conv.id || conv._id,
+        }))
+        setConversations(normalizedConversations)
       }
     } catch (error: any) {
       console.error('Error loading conversations:', error)
@@ -81,19 +111,37 @@ export default function AIAssistantPage() {
       return
     }
 
+    setLoadingMessages(true)
     try {
+      console.log('Loading messages for conversation:', conversationId)
       const response = await apiClient.conversations.get(conversationId)
-      if (response.success && response.data?.messages) {
-        const transformedMessages = response.data.messages.map((msg: any) => ({
-          id: msg.id || `msg-${Date.now()}`,
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now',
-        }))
-        setMessages(transformedMessages)
+      console.log('Conversation response:', response)
+      
+      if (response.success && response.data) {
+        // Handle both possible response structures
+        const messagesData = response.data.messages || response.data.conversation?.messages || []
+        
+        if (Array.isArray(messagesData) && messagesData.length > 0) {
+          const transformedMessages = messagesData.map((msg: any, index: number) => ({
+            id: msg.id || msg.message_id || `msg-${Date.now()}-${index}`,
+            role: msg.role,
+            content: msg.content || msg.message || '',
+            timestamp: msg.created_at ? formatTime(msg.created_at) : 'Now',
+          }))
+          setMessages(transformedMessages)
+        } else {
+          console.log('No messages found in response, setting empty array')
+          setMessages([])
+        }
+      } else {
+        console.warn('Response was not successful or missing data:', response)
+        setMessages([])
       }
     } catch (error) {
       console.error('Error loading messages:', error)
+      setMessages([])
+    } finally {
+      setLoadingMessages(false)
     }
   }
 
@@ -103,7 +151,7 @@ export default function AIAssistantPage() {
       id: 'welcome',
       role: 'assistant',
       content: 'Hello! I\'m WeaverAssistant, your AI travel planning companion. How can I help you today?',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: formatTime(new Date()),
     }])
     setMessage('')
   }
@@ -125,7 +173,7 @@ export default function AIAssistantPage() {
       id: `user-${Date.now()}`,
       role: 'user',
       content: message,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: formatTime(new Date()),
     }
 
     setMessages(prev => [...prev, userMessage])
@@ -140,7 +188,7 @@ export default function AIAssistantPage() {
           id: response.data.message_id || `assistant-${Date.now()}`,
           role: 'assistant',
           content: response.data.response || 'I apologize, but I didn\'t receive a proper response.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: formatTime(new Date()),
         }
 
         setMessages(prev => [...prev, assistantMessage])
@@ -159,7 +207,7 @@ export default function AIAssistantPage() {
         id: `error-${Date.now()}`,
         role: 'assistant',
         content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: formatTime(new Date()),
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
@@ -246,10 +294,17 @@ export default function AIAssistantPage() {
             </div>
           ) : (
             <div className="divide-y divide-default">
-              {filteredConversations.map((conv) => (
+              {filteredConversations.map((conv, index) => (
                 <div
-                  key={conv.conversation_id}
-                  onClick={() => setSelectedConversationId(conv.conversation_id)}
+                  key={conv.conversation_id || `conv-${index}`}
+                  onClick={() => {
+                    console.log('Conversation clicked:', conv.conversation_id, conv)
+                    if (conv.conversation_id) {
+                      setSelectedConversationId(conv.conversation_id)
+                    } else {
+                      console.warn('Conversation missing conversation_id:', conv)
+                    }
+                  }}
                   className={`p-4 cursor-pointer transition-colors ${
                     selectedConversationId === conv.conversation_id
                       ? 'bg-subtle border-l-2 border-l-black'
@@ -334,7 +389,20 @@ export default function AIAssistantPage() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-8 py-6 bg-subtle">
-          {messages.length === 0 ? (
+          {loadingMessages ? (
+            <div className="max-w-4xl mx-auto">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-black">
+                  <Bot size={20} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="card p-4 max-w-2xl">
+                    <div className="text-sm text-tertiary">Loading messages...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="max-w-4xl mx-auto">
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-black">
@@ -343,11 +411,13 @@ export default function AIAssistantPage() {
                 <div className="flex-1">
                   <div className="card p-4 max-w-2xl">
                     <div className="text-sm whitespace-pre-wrap">
-                      Hello! I'm WeaverAssistant, your AI travel planning companion. How can I help you today?
+                      {selectedConversationId 
+                        ? 'No messages in this conversation yet.'
+                        : 'Hello! I\'m WeaverAssistant, your AI travel planning companion. How can I help you today?'}
                     </div>
                   </div>
                   <div className="text-xs text-tertiary mt-1">
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <CurrentTime />
                   </div>
                 </div>
               </div>
