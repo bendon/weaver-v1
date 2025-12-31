@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@/v2/contexts/AuthContext'
 import {
   LayoutDashboard,
   Calendar,
@@ -14,20 +15,9 @@ import {
   LogOut
 } from 'lucide-react'
 
-interface SidebarProps {
-  organizationName?: string
-  organizationPlan?: string
-  userName?: string
-  userRole?: string
-}
-
-export default function Sidebar({
-  organizationName = 'Safari Dreams Kenya',
-  organizationPlan = 'Professional Plan',
-  userName = 'John Mwangi',
-  userRole = 'Admin'
-}: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   const navigation = [
     { name: 'Dashboard', href: '/v2/dmc/dashboard', icon: LayoutDashboard, badge: null },
@@ -45,6 +35,10 @@ export default function Sidebar({
 
   const isActive = (href: string) => pathname === href
 
+  // Get organization name (can be enhanced later with real org data)
+  const organizationName = 'Safari Dreams Kenya'
+  const organizationPlan = 'Professional Plan'
+
   // Get organization initials
   const orgInitials = organizationName
     .split(' ')
@@ -54,12 +48,15 @@ export default function Sidebar({
     .toUpperCase()
 
   // Get user initials
-  const userInitials = userName
+  const userInitials = (user?.full_name || user?.email || 'U')
     .split(' ')
     .map(word => word[0])
     .slice(0, 2)
     .join('')
     .toUpperCase()
+
+  // Format user role
+  const userRole = user?.role.replace('dmc_', '').replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'User'
 
   return (
     <aside className="fixed left-0 top-0 w-64 h-screen bg-white border-r border-default flex flex-col z-10">
@@ -142,10 +139,14 @@ export default function Sidebar({
             {userInitials}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">{userName}</div>
+            <div className="text-sm font-medium truncate">{user?.full_name || user?.email || 'User'}</div>
             <div className="text-xs text-tertiary truncate">{userRole}</div>
           </div>
-          <button className="p-1.5 rounded-lg hover:bg-subtle transition-colors">
+          <button
+            onClick={logout}
+            className="p-1.5 rounded-lg hover:bg-subtle transition-colors"
+            title="Sign out"
+          >
             <LogOut size={16} className="text-tertiary" />
           </button>
         </div>

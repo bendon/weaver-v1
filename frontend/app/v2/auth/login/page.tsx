@@ -2,12 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { apiClient } from '@/v2/lib/api'
+import { useAuth } from '@/v2/contexts/AuthContext'
 import '@/v2/styles/globals.css'
 
 export default function LoginPage() {
-  const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -19,20 +18,10 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await apiClient.auth.login(email, password)
-
-      if (response.success && response.data) {
-        // Store tokens
-        localStorage.setItem('access_token', response.data.access_token)
-        localStorage.setItem('refresh_token', response.data.refresh_token)
-
-        // Redirect to dashboard
-        router.push('/v2/dmc/dashboard')
-      } else {
-        setError(response.message || 'Login failed')
-      }
+      await login(email, password)
+      // Login function handles redirect
     } catch (err: any) {
-      setError(err.message || 'An error occurred during login')
+      setError(err.message || 'Invalid email or password')
     } finally {
       setLoading(false)
     }

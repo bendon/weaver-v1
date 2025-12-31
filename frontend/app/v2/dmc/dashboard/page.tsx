@@ -2,14 +2,34 @@
 
 import { Calendar, Users, TrendingUp, DollarSign, Clock, AlertCircle, Plane } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/v2/contexts/AuthContext'
+import { useDashboardStats } from '@/v2/hooks/useDashboardStats'
+import { useBookings } from '@/v2/hooks/useBookings'
 
 export default function DashboardPage() {
-  const stats = [
-    { label: 'Active Bookings', value: '23', change: '+3 this week', icon: Calendar },
-    { label: 'Departing This Week', value: '5', change: null, icon: Clock },
-    { label: 'Travelers In-Trip', value: '8', change: null, icon: Users },
-    { label: 'Completed (Month)', value: '34', change: null, icon: TrendingUp },
-    { label: 'Revenue (Month)', value: '$45,230', change: null, icon: DollarSign },
+  const { user } = useAuth()
+  const { stats, loading: statsLoading } = useDashboardStats()
+  const { bookings, loading: bookingsLoading } = useBookings({ per_page: 10, status: 'in_progress,confirmed' })
+
+  // Format revenue
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  // Get user's first name
+  const firstName = user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
+
+  const statsData = [
+    { label: 'Active Bookings', value: statsLoading ? '...' : stats.activeBookings.toString(), change: null, icon: Calendar },
+    { label: 'Departing This Week', value: statsLoading ? '...' : stats.departingThisWeek.toString(), change: null, icon: Clock },
+    { label: 'Travelers In-Trip', value: statsLoading ? '...' : stats.travelersInTrip.toString(), change: null, icon: Users },
+    { label: 'Completed (Month)', value: statsLoading ? '...' : stats.completedMTD.toString(), change: null, icon: TrendingUp },
+    { label: 'Revenue (Month)', value: statsLoading ? '...' : formatCurrency(stats.revenueMTD), change: null, icon: DollarSign },
   ]
 
   const alerts = [
@@ -64,10 +84,10 @@ export default function DashboardPage() {
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1>Good morning, John</h1>
+              <h1>Good morning, {firstName}</h1>
               <p className="text-secondary mt-1">Here's what's happening with your bookings today.</p>
             </div>
-            <Link href="/v2/dmc/ai-assistant" className="btn-primary px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
+            <Link href="/v2/dmc/bookings" className="btn-primary px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
@@ -81,7 +101,7 @@ export default function DashboardPage() {
       <div className="p-8">
         {/* Stats */}
         <div className="grid grid-cols-5 gap-4 mb-8">
-          {stats.map((stat, idx) => {
+          {statsData.map((stat, idx) => {
             const Icon = stat.icon
             return (
               <div key={idx} className="card p-5">

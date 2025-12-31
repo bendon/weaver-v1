@@ -1,15 +1,16 @@
-import '@/v2/styles/globals.css'
-import type { Metadata } from 'next'
+'use client'
 
-export const metadata: Metadata = {
-  title: 'TravelWeaver V2 - AI-Powered DMC Platform',
-  description: 'Destination Management Company platform with AI-powered travel planning',
-}
+import '@/v2/styles/globals.css'
+import { AuthProvider } from '@/v2/contexts/AuthContext'
 
 export default function V2RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <AuthProvider>
+      {children}
+    </AuthProvider>
+  )
 }
