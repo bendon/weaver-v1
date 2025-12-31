@@ -28,14 +28,20 @@ class WeaverAssistantService:
         """Register all available automations"""
         from app.v2.weaver_assistant.automations.greeting import GreetingAutomation
         from app.v2.weaver_assistant.automations.flight_search import FlightSearchAutomation
+        from app.v2.weaver_assistant.automations.hotel_search import HotelSearchAutomation
+        from app.v2.weaver_assistant.automations.itinerary_builder import ItineraryBuilderAutomation
+        from app.v2.weaver_assistant.automations.booking_creation import BookingCreationAutomation
+        from app.v2.weaver_assistant.automations.view_bookings import ViewBookingsAutomation
 
         # Register each automation with its intent type
         self.automation_registry.register(IntentType.GREETING, GreetingAutomation())
         self.automation_registry.register(IntentType.SEARCH_FLIGHT, FlightSearchAutomation())
+        self.automation_registry.register(IntentType.SEARCH_HOTEL, HotelSearchAutomation())
+        self.automation_registry.register(IntentType.BUILD_ITINERARY, ItineraryBuilderAutomation())
+        self.automation_registry.register(IntentType.CREATE_BOOKING, BookingCreationAutomation())
+        self.automation_registry.register(IntentType.VIEW_BOOKING, ViewBookingsAutomation())
 
         # TODO: Register more automations as you build them
-        # self.automation_registry.register(IntentType.SEARCH_HOTEL, HotelSearchAutomation())
-        # self.automation_registry.register(IntentType.BUILD_ITINERARY, ItineraryBuilderAutomation())
         # etc.
 
     async def process_message(
