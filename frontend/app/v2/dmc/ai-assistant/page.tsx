@@ -182,20 +182,22 @@ export default function AIAssistantPage() {
 
     try {
       const response = await apiClient.conversations.sendMessage(selectedConversationId, message)
-      
-      if (response.success && response.data) {
+
+      if (response.success) {
+        // V2 API returns response directly in the response object, not in response.data
+        const responseData: any = response
         const assistantMessage: Message = {
-          id: response.data.message_id || `assistant-${Date.now()}`,
+          id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: response.data.response || 'I apologize, but I didn\'t receive a proper response.',
+          content: responseData.response?.message || 'I apologize, but I didn\'t receive a proper response.',
           timestamp: formatTime(new Date()),
         }
 
         setMessages(prev => [...prev, assistantMessage])
-        
+
         // Update selected conversation ID if it was a new conversation
-        if (!selectedConversationId && response.data.conversation_id) {
-          setSelectedConversationId(response.data.conversation_id)
+        if (!selectedConversationId && responseData.conversation_id) {
+          setSelectedConversationId(responseData.conversation_id)
         }
 
         // Reload conversations to get updated list
