@@ -87,3 +87,11 @@ app.include_router(chat_hybrid.router, prefix="/api/chat", tags=["AI Chat - Hybr
 app.include_router(public.router, prefix="/api/public", tags=["Public"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["Webhooks"])
 
+# TravelWeaver V2 Routes (New Architecture)
+try:
+    from app.v2.api.routes import auth as auth_v2
+    app.include_router(auth_v2.router, prefix="/api/v2/auth", tags=["V2 - Authentication"])
+    print("✅ TravelWeaver V2 routes loaded")
+except ImportError as e:
+    print(f"⚠️  TravelWeaver V2 routes not available: {e}")
+
