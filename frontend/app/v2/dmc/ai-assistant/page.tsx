@@ -3,6 +3,12 @@
 import { Send, Sparkles, User, Bot, Plus, Search, MoreVertical, Calendar, Tag, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/v2/lib/api'
+import {
+  FlightResultsTemplate,
+  HotelResultsTemplate,
+  ItineraryResultsTemplate,
+  BookingConfirmationTemplate
+} from './templates'
 
 // Client-side only time formatter to avoid hydration mismatches
 function formatTime(date: Date | string): string {
@@ -229,6 +235,23 @@ export default function AIAssistantPage() {
     }
   }
 
+  const handleQuickAction = (action: string, data?: any) => {
+    // Pre-fill the message input with the action text
+    setMessage(action)
+  }
+
+  const handleStarterPrompt = (promptType: string) => {
+    const prompts: Record<string, string> = {
+      flight: 'Find flights to Nairobi tomorrow for 2 passengers',
+      hotel: 'Search for luxury hotels in Zanzibar',
+      safari: 'Plan a 7-day safari to Masai Mara',
+      beach: 'Find beach resorts in Mombasa',
+      itinerary: 'Create a 10-day itinerary for Kenya',
+      bookings: 'Show my bookings',
+    }
+    setMessage(prompts[promptType] || '')
+  }
+
   const getStageBadge = (stage?: string) => {
     if (!stage) return null
     
@@ -425,7 +448,7 @@ export default function AIAssistantPage() {
                 <div className="flex-1">
                   <div className="card p-4 max-w-2xl">
                     <div className="text-sm whitespace-pre-wrap">
-                      {selectedConversationId 
+                      {selectedConversationId
                         ? 'No messages in this conversation yet.'
                         : 'Hello! I\'m WeaverAssistant, your AI travel planning companion. How can I help you today?'}
                     </div>
@@ -435,6 +458,120 @@ export default function AIAssistantPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Starter Prompts */}
+              {!selectedConversationId && (
+                <div className="mt-8">
+                  <h3 className="text-sm font-medium mb-4 text-secondary">Quick Start</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Flight Search */}
+                    <button
+                      onClick={() => handleStarterPrompt('flight')}
+                      className="card p-4 text-left hover:shadow-md transition-shadow border border-default"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">Search Flights</div>
+                          <div className="text-xs text-tertiary">Find flights to your destination</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Hotel Search */}
+                    <button
+                      onClick={() => handleStarterPrompt('hotel')}
+                      className="card p-4 text-left hover:shadow-md transition-shadow border border-default"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">Find Hotels</div>
+                          <div className="text-xs text-tertiary">Search hotels by category & amenities</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Safari Planning */}
+                    <button
+                      onClick={() => handleStarterPrompt('safari')}
+                      className="card p-4 text-left hover:shadow-md transition-shadow border border-default"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">Plan Safari</div>
+                          <div className="text-xs text-tertiary">Custom safari packages & itineraries</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Beach Resort */}
+                    <button
+                      onClick={() => handleStarterPrompt('beach')}
+                      className="card p-4 text-left hover:shadow-md transition-shadow border border-default"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">Beach Resorts</div>
+                          <div className="text-xs text-tertiary">Discover coastal getaways</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Custom Itinerary */}
+                    <button
+                      onClick={() => handleStarterPrompt('itinerary')}
+                      className="card p-4 text-left hover:shadow-md transition-shadow border border-default"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                          <Calendar size={20} className="text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">Build Itinerary</div>
+                          <div className="text-xs text-tertiary">Create custom trip plans</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* View Bookings */}
+                    <button
+                      onClick={() => handleStarterPrompt('bookings')}
+                      className="card p-4 text-left hover:shadow-md transition-shadow border border-default"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">My Bookings</div>
+                          <div className="text-xs text-tertiary">View & manage bookings</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="max-w-4xl mx-auto space-y-6">
@@ -458,28 +595,83 @@ export default function AIAssistantPage() {
 
                   {/* Message */}
                   <div className={`flex-1 ${msg.role === 'user' ? 'flex flex-col items-end' : ''}`}>
-                    <div
-                      className={`card p-4 max-w-2xl ${
-                        msg.role === 'user' ? 'bg-subtle' : ''
-                      }`}
-                    >
-                      <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                    {/* Render structured templates for assistant messages */}
+                    {msg.role === 'assistant' && msg.response?.template ? (
+                      <div className="max-w-2xl w-full">
+                        {/* Message text */}
+                        {msg.content && (
+                          <div className="card p-4 mb-3">
+                            <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                          </div>
+                        )}
 
-                      {/* Render action buttons if present */}
-                      {msg.response?.actions && msg.response.actions.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {msg.response.actions.map((action, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => handleQuickAction(action.action, action.data)}
-                              className="btn-secondary px-4 py-2 text-sm rounded-lg border border-default hover:bg-subtle transition-colors"
-                            >
-                              {action.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                        {/* Template rendering */}
+                        {msg.response.template === 'flight_results' && msg.response.data && (
+                          <FlightResultsTemplate
+                            data={msg.response.data}
+                            onSelectFlight={(flightId) => {
+                              setMessage(`Book flight ${flightId}`)
+                            }}
+                          />
+                        )}
+
+                        {msg.response.template === 'hotel_results' && msg.response.data && (
+                          <HotelResultsTemplate
+                            data={msg.response.data}
+                            onSelectHotel={(hotelId) => {
+                              setMessage(`Book hotel ${hotelId}`)
+                            }}
+                          />
+                        )}
+
+                        {msg.response.template === 'itinerary_results' && msg.response.data && (
+                          <ItineraryResultsTemplate data={msg.response.data} />
+                        )}
+
+                        {msg.response.template === 'booking_confirmation' && msg.response.data && (
+                          <BookingConfirmationTemplate data={msg.response.data} />
+                        )}
+
+                        {/* Action buttons */}
+                        {msg.response?.actions && msg.response.actions.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {msg.response.actions.map((action, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => handleQuickAction(action.action, action.data)}
+                                className="btn-secondary px-4 py-2 text-sm rounded-lg border border-default hover:bg-subtle transition-colors"
+                              >
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Default plain text rendering for user messages and non-template assistant messages */
+                      <div
+                        className={`card p-4 max-w-2xl ${
+                          msg.role === 'user' ? 'bg-subtle' : ''
+                        }`}
+                      >
+                        <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+
+                        {/* Render action buttons if present */}
+                        {msg.response?.actions && msg.response.actions.length > 0 && (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {msg.response.actions.map((action, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => handleQuickAction(action.action, action.data)}
+                                className="btn-secondary px-4 py-2 text-sm rounded-lg border border-default hover:bg-subtle transition-colors"
+                              >
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="text-xs text-tertiary mt-1">{msg.timestamp}</div>
                   </div>
                 </div>
