@@ -49,6 +49,17 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: string
+  response?: {
+    template?: string
+    data?: any
+    actions?: Array<{
+      type: string
+      label: string
+      action: string
+      data?: any
+    }>
+    status?: string
+  }
 }
 
 export default function AIAssistantPage() {
@@ -191,6 +202,7 @@ export default function AIAssistantPage() {
           role: 'assistant',
           content: responseData.response?.message || 'I apologize, but I didn\'t receive a proper response.',
           timestamp: formatTime(new Date()),
+          response: responseData.response, // Include full response data for rendering
         }
 
         setMessages(prev => [...prev, assistantMessage])
@@ -452,6 +464,21 @@ export default function AIAssistantPage() {
                       }`}
                     >
                       <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+
+                      {/* Render action buttons if present */}
+                      {msg.response?.actions && msg.response.actions.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {msg.response.actions.map((action, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handleQuickAction(action.action, action.data)}
+                              className="btn-secondary px-4 py-2 text-sm rounded-lg border border-default hover:bg-subtle transition-colors"
+                            >
+                              {action.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="text-xs text-tertiary mt-1">{msg.timestamp}</div>
                   </div>

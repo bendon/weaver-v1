@@ -162,29 +162,62 @@ class IntentRecognizer:
         return entities
 
     def _extract_locations(self, query: str) -> Dict[str, Any]:
-        """Extract location entities"""
+        """Extract location entities including origin and destination"""
         entities = {}
 
-        # Common destinations (expand this with your database)
-        destinations = {
+        import re
+
+        # Common locations (expand this with your database)
+        locations = {
             "cape town": "CPT",
             "capetown": "CPT",
             "nairobi": "NBO",
+            "kampala": "EBB",
+            "entebbe": "EBB",
             "mombasa": "MBA",
             "zanzibar": "ZNZ",
+            "dar es salaam": "DAR",
             "serengeti": "SRG",
             "masai mara": "MRA",
             "mara": "MRA",
+            "kigali": "KGL",
+            "addis ababa": "ADD",
+            "johannesburg": "JNB",
+            "durban": "DUR",
             "kenya": "KE",
             "tanzania": "TZ",
-            "south africa": "ZA"
+            "south africa": "ZA",
+            "uganda": "UG"
         }
 
-        for name, code in destinations.items():
-            if name in query:
-                entities["destination"] = code
-                entities["destination_name"] = name.title()
-                break
+        # Try to extract origin and destination from "from X to Y" pattern
+        from_to_pattern = r'from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s|$|tomorrow|today|next|for|at|,|\.)'
+        match = re.search(from_to_pattern, query, re.IGNORECASE)
+
+        if match:
+            origin_text = match.group(1).strip().lower()
+            dest_text = match.group(2).strip().lower()
+
+            # Find origin in locations dict
+            for name, code in locations.items():
+                if name in origin_text or origin_text in name:
+                    entities["origin"] = code
+                    entities["origin_name"] = name.title()
+                    break
+
+            # Find destination in locations dict
+            for name, code in locations.items():
+                if name in dest_text or dest_text in name:
+                    entities["destination"] = code
+                    entities["destination_name"] = name.title()
+                    break
+        else:
+            # If no "from X to Y" pattern, just look for any destination mention
+            for name, code in locations.items():
+                if name in query:
+                    entities["destination"] = code
+                    entities["destination_name"] = name.title()
+                    break
 
         return entities
 

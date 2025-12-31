@@ -33,7 +33,9 @@ class FlightSearchAutomation(BaseAutomation):
 
         # Extract search parameters
         destination = entities.get("destination")
+        destination_name = entities.get("destination_name", destination)
         origin = entities.get("origin") or context.get("user_airport", "NBO")  # Default Nairobi
+        origin_name = entities.get("origin_name", origin)
         date = self._parse_date(entities)
         travelers_count = entities.get("travelers_count", 1)
         time_preference = entities.get("time_preference")
@@ -55,7 +57,7 @@ class FlightSearchAutomation(BaseAutomation):
         if not flights:
             return AutomationResult(
                 status=AutomationStatus.FAILED,
-                message=f"No flights found from {origin} to {destination} on {date}",
+                message=f"No flights found from {origin_name} to {destination_name} on {date}",
                 template="no_results"
             )
 
@@ -66,13 +68,15 @@ class FlightSearchAutomation(BaseAutomation):
                 "flights": flights,
                 "search_params": {
                     "origin": origin,
+                    "origin_name": origin_name,
                     "destination": destination,
+                    "destination_name": destination_name,
                     "date": date,
                     "travelers": travelers_count,
                     "class": flight_class
                 }
             },
-            message=f"Found {len(flights)} flights from {origin} to {destination}",
+            message=f"Found {len(flights)} flights from {origin_name} to {destination_name} on {date}",
             template="flight_results",
             actions=[
                 {
