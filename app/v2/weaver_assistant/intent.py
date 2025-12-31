@@ -65,10 +65,13 @@ class IntentRecognizer:
             "book", "reserve", "create booking", "make reservation"
         ],
         IntentType.VIEW_BOOKING: [
-            "show booking", "view booking", "my booking", "booking details"
+            "show booking", "view booking", "my booking", "booking details", "bookings"
+        ],
+        IntentType.VIEW_TRAVELER: [
+            "travelers", "traveller", "show travelers", "list travelers", "find traveler"
         ],
         IntentType.GET_DESTINATION_INFO: [
-            "tell me about", "information about", "what to do in", "best time to visit"
+            "tell me about", "information about", "what to do in", "best time to visit", "visit", "destination"
         ],
         IntentType.BUILD_ITINERARY: [
             "itinerary", "plan trip", "trip plan", "schedule", "safari"
@@ -117,6 +120,9 @@ class IntentRecognizer:
         """
         entities = {}
         query_lower = query.lower()
+
+        # Include raw query for automations that need it
+        entities["raw_query"] = query
 
         # Extract common entities
         entities.update(self._extract_dates(query_lower))
