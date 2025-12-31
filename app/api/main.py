@@ -97,11 +97,12 @@ app.include_router(webhooks.router, prefix="/webhooks", tags=["Webhooks"])
 
 # TravelWeaver V2 Routes (New Architecture)
 try:
-    from app.v2.api.routes import auth as auth_v2, travelers as travelers_v2, bookings as bookings_v2
+    from app.v2.api.routes import auth as auth_v2, travelers as travelers_v2, bookings as bookings_v2, assistant as assistant_v2
     app.include_router(auth_v2.router, prefix="/api/v2/auth", tags=["V2 - Authentication"])
     app.include_router(travelers_v2.router, prefix="/api/v2/travelers", tags=["V2 - Travelers"])
     app.include_router(bookings_v2.router, prefix="/api/v2/bookings", tags=["V2 - Bookings"])
-    print("✅ TravelWeaver V2 routes loaded (auth, travelers, bookings)")
+    app.include_router(assistant_v2.router, prefix="/api/v2/assistant", tags=["V2 - WeaverAssistant"])
+    print("✅ TravelWeaver V2 routes loaded (auth, travelers, bookings, assistant)")
 except ImportError as e:
     print(f"⚠️  TravelWeaver V2 routes not available: {e}")
 
