@@ -26,19 +26,21 @@ class MongoDB:
 
             # Test connection
             self.client.server_info()
-            print(f"✓ Connected to MongoDB: {settings.MONGODB_DATABASE}")
+            print(f"[OK] Connected to MongoDB: {settings.MONGODB_DATABASE}")
 
             # Create indexes
             self._create_indexes()
 
         except Exception as e:
-            print(f"⚠️  Warning: MongoDB not available - V2 features will be limited")
+            print(f"[WARNING] MongoDB not available - V2 features will be limited")
             print(f"   Error: {e}")
             self.client = None
             self.db = None
 
     def _create_indexes(self):
         """Create database indexes"""
+        if self.db is None:
+            return
         try:
             # Users collection
             self.db.users.create_index("email", unique=True)
@@ -63,20 +65,20 @@ class MongoDB:
             # Payments collection
             self.db.payments.create_index("booking_id")
 
-            print("✓ MongoDB indexes created")
+            print("[OK] MongoDB indexes created")
 
         except Exception as e:
             print(f"Warning: Error creating indexes: {e}")
 
     def close(self):
         """Close MongoDB connection"""
-        if self.client:
+        if self.client is not None:
             self.client.close()
-            print("✓ MongoDB connection closed")
+            print("[OK] MongoDB connection closed")
 
     def get_database(self):
         """Get database instance"""
-        if not self.db:
+        if self.db is None:
             self.connect()
         return self.db
 
@@ -99,7 +101,7 @@ class SQLiteDB:
             self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             self.conn.row_factory = sqlite3.Row  # Return rows as dictionaries
 
-            print(f"✓ Connected to SQLite: {self.db_path}")
+            print(f"[OK] Connected to SQLite: {self.db_path}")
 
             # Create tables
             self._create_tables()
@@ -195,7 +197,7 @@ class SQLiteDB:
             """)
 
             self.conn.commit()
-            print("✓ SQLite tables created")
+            print("[OK] SQLite tables created")
 
         except Exception as e:
             print(f"Warning: Error creating tables: {e}")
@@ -204,7 +206,7 @@ class SQLiteDB:
         """Close SQLite connection"""
         if self.conn:
             self.conn.close()
-            print("✓ SQLite connection closed")
+            print("[OK] SQLite connection closed")
 
     def get_connection(self):
         """Get database connection"""
@@ -242,7 +244,7 @@ def init_databases():
     print("Initializing databases...")
     mongodb.connect()
     sqlite_db.connect()
-    print("✓ All databases initialized")
+    print("[OK] All databases initialized")
 
 
 def close_databases():
@@ -250,4 +252,4 @@ def close_databases():
     print("Closing databases...")
     mongodb.close()
     sqlite_db.close()
-    print("✓ All databases closed")
+    print("[OK] All databases closed")

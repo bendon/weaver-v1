@@ -1,243 +1,347 @@
 'use client'
 
-import { Search, Filter, Download, MoreVertical } from 'lucide-react'
-import { useState } from 'react'
+import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 export default function BookingsPage() {
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedBooking, setSelectedBooking] = useState<string | null>(null)
 
   const bookings = [
     {
-      code: 'BK-2025-XJ8K9P',
-      traveler: 'Sarah Chen',
-      destination: 'Tokyo, Japan',
-      dates: 'Mar 15-22, 2025',
-      status: 'confirmed',
-      value: '$8,450',
-      payment: 'paid'
+      code: 'ABC123',
+      traveler: 'Smith Family',
+      travelerCount: 2,
+      trip: 'Kenya Safari Adventure',
+      route: 'NBO → Masai Mara → NBO',
+      dates: 'Mar 15 – 22, 2025',
+      nights: 7,
+      status: 'active',
+      statusText: 'Active · Day 3',
+      value: '$4,720'
     },
     {
-      code: 'BK-2025-L9M2N4',
-      traveler: 'Michael Brown',
-      destination: 'Paris, France',
-      dates: 'Mar 18-25, 2025',
-      status: 'confirmed',
-      value: '$12,300',
-      payment: 'paid'
+      code: 'DEF456',
+      traveler: 'Johnson Family',
+      travelerCount: 4,
+      trip: 'Tanzania Serengeti',
+      route: 'JRO → Serengeti → Ngorongoro',
+      dates: 'Mar 28 – Apr 5, 2025',
+      nights: 8,
+      status: 'upcoming',
+      statusText: 'Upcoming',
+      value: '$12,450'
     },
     {
-      code: 'BK-2025-P7Q8R9',
-      traveler: 'Emily Davis',
-      destination: 'Bali, Indonesia',
-      dates: 'Mar 20-30, 2025',
-      status: 'pending',
-      value: '$6,750',
-      payment: 'deposit'
-    },
-    {
-      code: 'BK-2025-M3N4P5',
-      traveler: 'Robert Kim',
-      destination: 'London, UK',
-      dates: 'Mar 12-19, 2025',
-      status: 'in-progress',
-      value: '$9,200',
-      payment: 'paid'
-    },
-    {
-      code: 'BK-2025-Q6R7S8',
-      traveler: 'Jessica Wilson',
-      destination: 'Dubai, UAE',
-      dates: 'Apr 5-12, 2025',
+      code: 'GHI789',
+      traveler: 'Chen Couple',
+      travelerCount: 2,
+      trip: 'Kenya Safari + Beach',
+      route: 'NBO → Mara → Diani Beach',
+      dates: 'Apr 10 – 20, 2025',
+      nights: 10,
       status: 'draft',
-      value: '$15,800',
-      payment: 'pending'
+      statusText: 'Draft',
+      value: '$5,890'
     },
     {
-      code: 'BK-2025-T9U1V2',
-      traveler: 'David Martinez',
-      destination: 'Barcelona, Spain',
-      dates: 'Apr 10-17, 2025',
-      status: 'confirmed',
-      value: '$7,900',
-      payment: 'deposit'
-    },
-    {
-      code: 'BK-2025-W3X4Y5',
-      traveler: 'Amanda Lee',
-      destination: 'Santorini, Greece',
-      dates: 'May 1-8, 2025',
-      status: 'draft',
-      value: '$10,500',
-      payment: 'pending'
-    },
-    {
-      code: 'BK-2025-Z6A7B8',
-      traveler: 'Chris Taylor',
-      destination: 'Rome, Italy',
-      dates: 'Feb 28-Mar 7, 2025',
+      code: 'JKL012',
+      traveler: 'Williams Group',
+      travelerCount: 6,
+      trip: 'Uganda Gorilla Trek',
+      route: 'EBB → Bwindi → Queen Elizabeth',
+      dates: 'Feb 20 – 28, 2025',
+      nights: 8,
       status: 'completed',
-      value: '$11,200',
-      payment: 'paid'
+      statusText: 'Completed',
+      value: '$18,200'
     }
   ]
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      'confirmed': 'badge-active',
-      'in-progress': 'badge-alert',
-      'pending': 'badge-upcoming',
+      'active': 'badge-active',
+      'upcoming': 'badge-upcoming',
       'draft': 'badge-draft',
       'completed': 'badge-completed'
     }
     return badges[status as keyof typeof badges] || 'badge-draft'
   }
 
-  const getPaymentBadge = (payment: string) => {
-    const badges = {
-      'paid': 'badge-completed',
-      'deposit': 'badge-active',
-      'pending': 'badge-draft'
-    }
-    return badges[payment as keyof typeof badges] || 'badge-draft'
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
   }
 
+  const bookingDetails: Record<string, any> = {
+    'ABC123': {
+      code: 'ABC123',
+      trip: 'Kenya Safari Adventure',
+      status: 'active',
+      statusText: 'Active · Day 3',
+      travelers: [
+        { name: 'John Smith', phone: '+44 7911 234567', initials: 'JS' },
+        { name: 'Jane Smith', phone: '+44 7911 234568', initials: 'JS' }
+      ],
+      returnFlight: {
+        code: 'KQ100',
+        date: 'Mar 22',
+        route: 'NBO → LHR',
+        departure: '23:55 departure',
+        status: 'delayed',
+        delay: '2h'
+      },
+      itinerary: {
+        today: {
+          day: 3,
+          date: 'Monday, March 17',
+          activities: [
+            { time: '06:00', icon: '🦁', title: 'Morning Game Drive', location: 'Masai Mara National Reserve' },
+            { time: '10:00', icon: '🍽️', title: 'Rest & Lunch', location: 'Mara Serena Safari Lodge' },
+            { time: '15:30', icon: '🦁', title: 'Afternoon Game Drive', location: 'Best time for predator activity' }
+          ]
+        },
+        previous: [
+          { day: 1, date: 'Saturday, March 15', summary: 'Arrival' },
+          { day: 2, date: 'Sunday, March 16', summary: 'Transfer to Mara' }
+        ]
+      }
+    }
+  }
+
+  const currentBooking = selectedBooking ? bookingDetails[selectedBooking] : null
+
+  const closeBookingDetail = () => {
+    setSelectedBooking(null)
+    document.body.style.overflow = 'auto'
+  }
+
+  const openBookingDetail = (code: string) => {
+    setSelectedBooking(code)
+    document.body.style.overflow = 'hidden'
+  }
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!selectedBooking) return
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeBookingDetail()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [selectedBooking])
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-subtle">
       {/* Header */}
-      <div className="border-b border-default bg-white">
+      <div className="bg-white border-b border-default">
         <div className="px-8 py-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl mb-1">Bookings</h1>
-              <p className="text-secondary">Manage all trip bookings and reservations</p>
+              <h1>Bookings</h1>
+              <p className="text-secondary mt-1">Manage all travel bookings</p>
             </div>
-            <button className="btn-primary px-6 py-2.5 rounded-lg font-medium">
-              + New Booking
-            </button>
-          </div>
-
-          {/* Filters */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" size={18} />
-              <input
-                type="text"
-                placeholder="Search by booking code, traveler, or destination..."
-                className="input-field w-full pl-10"
-              />
-            </div>
-            <button className="btn-secondary px-4 py-2.5 rounded-lg flex items-center gap-2">
-              <Filter size={16} />
-              <span>Filters</span>
-            </button>
-            <button className="btn-secondary px-4 py-2.5 rounded-lg flex items-center gap-2">
-              <Download size={16} />
-              <span>Export</span>
-            </button>
-          </div>
-
-          {/* Status Tabs */}
-          <div className="flex items-center gap-6 mt-6 border-b border-default -mb-px">
-            {['all', 'confirmed', 'in-progress', 'pending', 'draft', 'completed'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`pb-3 text-sm font-medium transition-colors ${
-                  statusFilter === status
-                    ? 'border-b-2 border-black'
-                    : 'text-secondary hover:text-primary'
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
-              </button>
-            ))}
+            <Link href="/v2/dmc/ai-assistant" className="btn-primary px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              New Booking
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="px-8 py-6">
+      <div className="p-8">
+        {/* Filters */}
+        <div className="card p-4 mb-6 flex items-center gap-4">
+          <div className="flex-1">
+            <input type="text" placeholder="Search bookings..." className="input-field w-full" />
+          </div>
+          <select className="input-field">
+            <option>All Status</option>
+            <option>Active</option>
+            <option>Upcoming</option>
+            <option>Completed</option>
+            <option>Draft</option>
+          </select>
+          <select className="input-field">
+            <option>All Dates</option>
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>Next Month</option>
+          </select>
+        </div>
+
+        {/* Table */}
         <div className="card overflow-hidden">
           <table className="w-full">
-            <thead className="bg-subtle border-b border-default">
-              <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Booking Code
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Traveler
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Destination
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Dates
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Value
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="w-12 px-6 py-3"></th>
+            <thead>
+              <tr className="border-b border-default bg-subtle">
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Booking</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Traveler</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Trip</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Dates</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Status</th>
+                <th className="px-5 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wide">Value</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-default">
               {bookings.map((booking) => (
-                <tr key={booking.code} className="table-row">
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-sm font-medium">{booking.code}</span>
+                <tr key={booking.code} className="table-row cursor-pointer" onClick={() => openBookingDetail(booking.code)}>
+                  <td className="px-5 py-4">
+                    <span className="font-mono font-medium">{booking.code}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm">{booking.traveler}</span>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-subtle rounded-full flex items-center justify-center text-xs font-medium">
+                        {getInitials(booking.traveler)}
+                      </div>
+                      <div>
+                        <div className="font-medium">{booking.traveler}</div>
+                        <div className="text-sm text-tertiary">{booking.travelerCount} travelers</div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-secondary">{booking.destination}</span>
+                  <td className="px-5 py-4">
+                    <div className="font-medium">{booking.trip}</div>
+                    <div className="text-sm text-tertiary">{booking.route}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-secondary">{booking.dates}</span>
+                  <td className="px-5 py-4">
+                    <div>{booking.dates}</div>
+                    <div className="text-sm text-tertiary">{booking.nights} nights</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-5 py-4">
                     <span className={`badge ${getStatusBadge(booking.status)}`}>
-                      {booking.status}
+                      {booking.statusText}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium">{booking.value}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`badge ${getPaymentBadge(booking.payment)}`}>
-                      {booking.payment}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="text-tertiary hover:text-primary">
-                      <MoreVertical size={16} />
-                    </button>
+                  <td className="px-5 py-4 text-right">
+                    <span className="font-mono font-medium">{booking.value}</span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-secondary">
-            Showing <span className="font-medium">1-8</span> of <span className="font-medium">47</span> bookings
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="btn-secondary px-3 py-2 rounded text-sm">Previous</button>
-            <button className="btn-primary px-3 py-2 rounded text-sm">1</button>
-            <button className="btn-secondary px-3 py-2 rounded text-sm">2</button>
-            <button className="btn-secondary px-3 py-2 rounded text-sm">3</button>
-            <button className="btn-secondary px-3 py-2 rounded text-sm">Next</button>
+      {/* Booking Detail Slideover */}
+      {selectedBooking && currentBooking && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeBookingDetail}></div>
+          <div className="absolute right-0 top-0 h-full w-full max-w-3xl bg-white shadow-2xl slide-panel overflow-auto">
+            <div className="sticky top-0 bg-white border-b border-default px-6 py-4 flex items-center justify-between z-10">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xl font-semibold">{currentBooking.code}</span>
+                  <span className={`badge ${getStatusBadge(currentBooking.status)}`}>
+                    {currentBooking.statusText}
+                  </span>
+                </div>
+                <p className="text-sm text-secondary mt-1">{currentBooking.trip}</p>
+              </div>
+              <button onClick={closeBookingDetail} className="p-2 hover:bg-subtle rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-3 gap-6">
+                <div className="col-span-2 space-y-6">
+                  {/* Today */}
+                  <div className="card overflow-hidden border-2 border-black">
+                    <div className="px-4 py-3 bg-black text-white flex items-center justify-between">
+                      <span className="font-medium">
+                        Day {currentBooking.itinerary.today.day} — {currentBooking.itinerary.today.date}
+                      </span>
+                      <span className="text-sm opacity-70">Today</span>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {currentBooking.itinerary.today.activities.map((activity: any, idx: number) => (
+                        <div key={idx} className="flex gap-3">
+                          <span className="text-tertiary text-sm w-12 font-mono">{activity.time}</span>
+                          <div className="w-8 h-8 bg-subtle rounded-lg flex items-center justify-center">
+                            {activity.icon}
+                          </div>
+                          <div>
+                            <div className="font-medium">{activity.title}</div>
+                            <div className="text-sm text-secondary">{activity.location}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Previous Days */}
+                  <div className="card">
+                    {currentBooking.itinerary.previous.map((day: any, idx: number) => (
+                      <div key={idx} className={`px-4 py-3 flex items-center gap-2 cursor-pointer hover:bg-subtle ${
+                        idx < currentBooking.itinerary.previous.length - 1 ? 'border-b border-default' : ''
+                      }`}>
+                        <svg className="w-4 h-4 text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="font-medium">
+                          Day {day.day} — {day.date}
+                        </span>
+                        <span className="ml-auto text-sm text-tertiary">{day.summary}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Travelers */}
+                  <div className="card p-4">
+                    <h4 className="font-medium mb-3" style={{ fontFamily: "'Geist', sans-serif" }}>Travelers</h4>
+                    <div className="space-y-3">
+                      {currentBooking.travelers.map((traveler: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-subtle rounded-full flex items-center justify-center text-xs">
+                            {traveler.initials}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">{traveler.name}</div>
+                            <div className="text-xs text-tertiary">{traveler.phone}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Return Flight */}
+                  <div className="card p-4">
+                    <h4 className="font-medium mb-3" style={{ fontFamily: "'Geist', sans-serif" }}>Return Flight</h4>
+                    <div className="text-sm">
+                      <div className="font-mono">
+                        {currentBooking.returnFlight.code} · {currentBooking.returnFlight.date}
+                      </div>
+                      <div className="text-secondary">{currentBooking.returnFlight.route}</div>
+                      <div className="text-secondary">{currentBooking.returnFlight.departure}</div>
+                      <span className="badge badge-alert mt-2">
+                        Delayed {currentBooking.returnFlight.delay}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-2">
+                    <button className="w-full btn-primary px-4 py-2.5 rounded-lg text-sm">Send Message</button>
+                    <button className="w-full btn-secondary px-4 py-2.5 rounded-lg text-sm">Resend Itinerary</button>
+                    <button className="w-full btn-secondary px-4 py-2.5 rounded-lg text-sm">Edit Booking</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

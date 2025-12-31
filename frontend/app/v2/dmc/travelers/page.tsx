@@ -1,231 +1,90 @@
 'use client'
 
-import { Search, Filter, Download, Mail, Phone, MapPin, Calendar } from 'lucide-react'
-
 export default function TravelersPage() {
   const travelers = [
     {
-      name: 'Sarah Chen',
-      email: 'sarah.chen@email.com',
-      phone: '+1 (555) 123-4567',
-      location: 'San Francisco, CA',
-      nationality: 'United States',
-      totalBookings: 8,
-      totalSpent: 42500,
-      lastTrip: 'Tokyo, Japan',
-      lastTripDate: 'Mar 2025',
-      status: 'vip'
-    },
-    {
-      name: 'Michael Brown',
-      email: 'michael.b@email.com',
-      phone: '+1 (555) 234-5678',
-      location: 'New York, NY',
-      nationality: 'United States',
-      totalBookings: 5,
-      totalSpent: 28300,
-      lastTrip: 'Paris, France',
-      lastTripDate: 'Feb 2025',
+      name: 'John Smith',
+      phone: '+44 7911 234567',
+      trips: 3,
+      bookingCode: 'ABC123',
       status: 'active'
     },
     {
-      name: 'Emily Davis',
-      email: 'emily.davis@email.com',
-      phone: '+44 20 1234 5678',
-      location: 'London, UK',
-      nationality: 'United Kingdom',
-      totalBookings: 12,
-      totalSpent: 67800,
-      lastTrip: 'Bali, Indonesia',
-      lastTripDate: 'Jan 2025',
-      status: 'vip'
+      name: 'Michael Johnson',
+      phone: '+1 555 123 4567',
+      trips: 1,
+      bookingCode: 'DEF456',
+      status: 'upcoming'
     },
     {
-      name: 'Robert Kim',
-      email: 'robert.kim@email.com',
-      phone: '+1 (555) 345-6789',
-      location: 'Los Angeles, CA',
-      nationality: 'United States',
-      totalBookings: 3,
-      totalSpent: 15200,
-      lastTrip: 'London, UK',
-      lastTripDate: 'Mar 2025',
-      status: 'active'
-    },
-    {
-      name: 'Jessica Wilson',
-      email: 'jessica.w@email.com',
-      phone: '+1 (555) 456-7890',
-      location: 'Chicago, IL',
-      nationality: 'United States',
-      totalBookings: 6,
-      totalSpent: 34500,
-      lastTrip: 'Dubai, UAE',
-      lastTripDate: 'Dec 2024',
-      status: 'active'
-    },
-    {
-      name: 'David Martinez',
-      email: 'david.m@email.com',
-      phone: '+34 91 123 4567',
-      location: 'Madrid, Spain',
-      nationality: 'Spain',
-      totalBookings: 4,
-      totalSpent: 22100,
-      lastTrip: 'Barcelona, Spain',
-      lastTripDate: 'Nov 2024',
-      status: 'active'
-    },
-    {
-      name: 'Amanda Lee',
-      email: 'amanda.lee@email.com',
-      phone: '+1 (555) 567-8901',
-      location: 'Seattle, WA',
-      nationality: 'United States',
-      totalBookings: 2,
-      totalSpent: 12800,
-      lastTrip: 'Santorini, Greece',
-      lastTripDate: 'Sep 2024',
-      status: 'new'
-    },
-    {
-      name: 'Chris Taylor',
-      email: 'chris.taylor@email.com',
-      phone: '+1 (555) 678-9012',
-      location: 'Boston, MA',
-      nationality: 'United States',
-      totalBookings: 7,
-      totalSpent: 39600,
-      lastTrip: 'Rome, Italy',
-      lastTripDate: 'Feb 2025',
-      status: 'active'
+      name: 'Jane Chen',
+      phone: '+86 139 1234 5678',
+      trips: 2,
+      bookingCode: 'GHI789',
+      status: null
     }
   ]
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-subtle">
       {/* Header */}
-      <div className="border-b border-default bg-white">
+      <div className="bg-white border-b border-default">
         <div className="px-8 py-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl mb-1">Travelers</h1>
-              <p className="text-secondary">Manage traveler profiles and preferences</p>
+              <h1>Travelers</h1>
+              <p className="text-secondary mt-1">Your traveler directory</p>
             </div>
-            <button className="btn-primary px-6 py-2.5 rounded-lg font-medium">
-              + Add Traveler
-            </button>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" size={18} />
-              <input
-                type="text"
-                placeholder="Search by name, email, or location..."
-                className="input-field w-full pl-10"
-              />
-            </div>
-            <button className="btn-secondary px-4 py-2.5 rounded-lg flex items-center gap-2">
-              <Filter size={16} />
-              <span>Filters</span>
-            </button>
-            <button className="btn-secondary px-4 py-2.5 rounded-lg flex items-center gap-2">
-              <Download size={16} />
-              <span>Export</span>
+            <button className="btn-primary px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Traveler
             </button>
           </div>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="px-8 py-6">
-        <div className="grid grid-cols-3 gap-6">
+      <div className="p-8">
+        <div className="card p-4 mb-6">
+          <input type="text" placeholder="Search travelers by name, email, or phone..." className="input-field w-full" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
           {travelers.map((traveler) => (
-            <div key={traveler.email} className="card p-6 hover:shadow-lg transition-shadow cursor-pointer">
-              {/* Header */}
+            <div key={traveler.name} className="card p-5">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-subtle flex items-center justify-center text-base font-medium">
-                    {traveler.name.split(' ').map(n => n[0]).join('')}
+                  <div className="w-12 h-12 bg-subtle rounded-full flex items-center justify-center font-medium">
+                    {getInitials(traveler.name)}
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold mb-0.5">{traveler.name}</h3>
-                    {traveler.status === 'vip' && (
-                      <span className="badge badge-alert text-xs">VIP</span>
-                    )}
-                    {traveler.status === 'new' && (
-                      <span className="badge badge-active text-xs">New</span>
-                    )}
+                    <h3 className="font-medium text-base" style={{ fontFamily: "'Geist', sans-serif" }}>
+                      {traveler.name}
+                    </h3>
+                    <p className="text-sm text-secondary">{traveler.phone}</p>
                   </div>
                 </div>
+                {traveler.status && (
+                  <span className={`badge ${traveler.status === 'active' ? 'badge-active' : 'badge-upcoming'}`}>
+                    {traveler.status === 'active' ? 'Active' : 'Upcoming'}
+                  </span>
+                )}
               </div>
-
-              {/* Contact */}
-              <div className="space-y-2 mb-4 pb-4 border-b border-default">
-                <div className="flex items-center gap-2 text-sm text-secondary">
-                  <Mail size={14} />
-                  <span className="truncate">{traveler.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-secondary">
-                  <Phone size={14} />
-                  <span>{traveler.phone}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-secondary">
-                  <MapPin size={14} />
-                  <span>{traveler.location}</span>
-                </div>
+              <div className="pt-4 border-t border-default flex justify-between text-sm">
+                <span className="text-tertiary">{traveler.trips} trips</span>
+                <span className="font-mono">{traveler.bookingCode}</span>
               </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <div className="text-xs text-tertiary mb-1">Total Bookings</div>
-                  <div className="text-lg font-semibold">{traveler.totalBookings}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-tertiary mb-1">Total Spent</div>
-                  <div className="text-lg font-semibold">{formatCurrency(traveler.totalSpent)}</div>
-                </div>
-              </div>
-
-              {/* Last Trip */}
-              <div className="pt-4 border-t border-default">
-                <div className="flex items-start gap-2">
-                  <Calendar size={14} className="text-tertiary mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-tertiary mb-0.5">Last Trip</div>
-                    <div className="text-sm font-medium truncate">{traveler.lastTrip}</div>
-                    <div className="text-xs text-secondary">{traveler.lastTripDate}</div>
-                  </div>
-                </div>
+              <div className="mt-4 flex gap-2">
+                <button className="flex-1 btn-secondary px-3 py-2 rounded-lg text-sm">View</button>
+                <button className="flex-1 btn-primary px-3 py-2 rounded-lg text-sm">Message</button>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-8 flex items-center justify-between">
-          <div className="text-sm text-secondary">
-            Showing <span className="font-medium">1-8</span> of <span className="font-medium">127</span> travelers
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="btn-secondary px-3 py-2 rounded text-sm">Previous</button>
-            <button className="btn-primary px-3 py-2 rounded text-sm">1</button>
-            <button className="btn-secondary px-3 py-2 rounded text-sm">2</button>
-            <button className="btn-secondary px-3 py-2 rounded text-sm">3</button>
-            <button className="btn-secondary px-3 py-2 rounded text-sm">Next</button>
-          </div>
         </div>
       </div>
     </div>

@@ -1,97 +1,134 @@
 'use client'
 
-import { Zap, Clock, Mail, MessageSquare, Bell } from 'lucide-react'
-
 export default function AutomationPage() {
-  const automations = [
-    {
-      icon: Mail,
-      title: 'Booking Confirmation Emails',
-      description: 'Automatically send booking confirmations to travelers',
-      enabled: true
-    },
-    {
-      icon: Bell,
-      title: 'Payment Reminders',
-      description: 'Send payment reminders 7 days before due date',
-      enabled: true
-    },
-    {
-      icon: MessageSquare,
-      title: 'Pre-Trip Messages',
-      description: 'Send trip details and tips 3 days before departure',
-      enabled: true
-    },
-    {
-      icon: Clock,
-      title: 'Flight Delay Notifications',
-      description: 'Notify travelers and team about flight delays',
-      enabled: true
-    },
-    {
-      icon: Mail,
-      title: 'Document Reminders',
-      description: 'Remind travelers to upload missing documents',
-      enabled: false
-    },
-    {
-      icon: MessageSquare,
-      title: 'Post-Trip Follow-up',
-      description: 'Request feedback 2 days after trip completion',
-      enabled: false
-    }
+  const preTripAutomations = [
+    { title: 'Welcome Message', description: 'Sent after booking is confirmed', enabled: true },
+    { title: 'Document Reminder', description: '14 days before departure', enabled: true },
+    { title: 'Packing Tips', description: '7 days before departure', enabled: true },
+    { title: 'Flight Reminder', description: '24 hours before departure', enabled: true }
+  ]
+
+  const duringTripAutomations = [
+    { title: 'Daily Check-in', description: 'Morning message with today\'s schedule', enabled: true },
+    { title: 'Flight Alerts', description: 'Automatic delay/cancellation notifications', enabled: true }
+  ]
+
+  const postTripAutomations = [
+    { title: 'Welcome Home', description: 'Thank you message on return', enabled: true },
+    { title: 'Review Request', description: '7 days after return', enabled: false }
   ]
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-subtle">
       {/* Header */}
-      <div className="border-b border-default bg-white">
+      <div className="bg-white border-b border-default">
         <div className="px-8 py-6">
-          <div className="flex items-center gap-3 mb-1">
-            <Zap size={28} />
-            <h1 className="text-3xl">Automation</h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1>Automation</h1>
+              <p className="text-secondary mt-1">Configure automated traveler messages</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-secondary">Master Switch</span>
+              <button className="w-12 h-6 bg-black rounded-full relative">
+                <span className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></span>
+              </button>
+            </div>
           </div>
-          <p className="text-secondary">Configure automated workflows and notifications</p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-8 py-6">
-        <div className="max-w-4xl">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Active Automations</h2>
-            <p className="text-sm text-secondary">
-              Enable or disable automated workflows to streamline your operations
-            </p>
+      <div className="p-8">
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2 space-y-6">
+            {/* Pre-Trip */}
+            <div className="card">
+              <div className="px-5 py-4 border-b border-default">
+                <h3 className="text-lg">Pre-Trip Messages</h3>
+              </div>
+              <div className="divide-y divide-default">
+                {preTripAutomations.map((auto, idx) => (
+                  <div key={idx} className="p-4 flex items-center justify-between">
+                    <div>
+                      <div className="font-medium" style={{ fontFamily: "'Geist', sans-serif" }}>{auto.title}</div>
+                      <div className="text-sm text-secondary">{auto.description}</div>
+                    </div>
+                    <button className={`w-10 h-5 rounded-full relative ${auto.enabled ? 'bg-black' : 'border-2'}`}>
+                      <span className={`absolute ${auto.enabled ? 'right-0.5 top-0.5 w-4 h-4 bg-white' : 'left-0.5 top-0.5 w-4 h-4 bg-black/20'} rounded-full`}></span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* During Trip */}
+            <div className="card">
+              <div className="px-5 py-4 border-b border-default">
+                <h3 className="text-lg">During Trip</h3>
+              </div>
+              <div className="divide-y divide-default">
+                {duringTripAutomations.map((auto, idx) => (
+                  <div key={idx} className="p-4 flex items-center justify-between">
+                    <div>
+                      <div className="font-medium" style={{ fontFamily: "'Geist', sans-serif" }}>{auto.title}</div>
+                      <div className="text-sm text-secondary">{auto.description}</div>
+                    </div>
+                    <button className={`w-10 h-5 rounded-full relative ${auto.enabled ? 'bg-black' : 'border-2'}`}>
+                      <span className={`absolute ${auto.enabled ? 'right-0.5 top-0.5 w-4 h-4 bg-white' : 'left-0.5 top-0.5 w-4 h-4 bg-black/20'} rounded-full`}></span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Post-Trip */}
+            <div className="card">
+              <div className="px-5 py-4 border-b border-default">
+                <h3 className="text-lg">Post-Trip</h3>
+              </div>
+              <div className="divide-y divide-default">
+                {postTripAutomations.map((auto, idx) => (
+                  <div key={idx} className="p-4 flex items-center justify-between">
+                    <div>
+                      <div className="font-medium" style={{ fontFamily: "'Geist', sans-serif" }}>{auto.title}</div>
+                      <div className="text-sm text-secondary">{auto.description}</div>
+                    </div>
+                    <button className={`w-10 h-5 rounded-full relative ${auto.enabled ? 'bg-black' : 'border-2'}`}>
+                      <span className={`absolute ${auto.enabled ? 'right-0.5 top-0.5 w-4 h-4 bg-white' : 'left-0.5 top-0.5 w-4 h-4 bg-black/20'} rounded-full`}></span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {automations.map((automation) => {
-              const Icon = automation.icon
-              return (
-                <div key={automation.title} className="card p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-subtle flex items-center justify-center">
-                        <Icon size={20} className="text-secondary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">{automation.title}</h3>
-                        <p className="text-sm text-secondary">{automation.description}</p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        defaultChecked={automation.enabled}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
-                    </label>
-                  </div>
-                </div>
-              )
-            })}
+          {/* Settings */}
+          <div className="space-y-4">
+            <div className="card p-5">
+              <h3 className="font-medium mb-4" style={{ fontFamily: "'Geist', sans-serif" }}>Quiet Hours</h3>
+              <div className="flex items-center gap-3">
+                <input type="time" defaultValue="22:00" className="input-field" />
+                <span className="text-secondary">to</span>
+                <input type="time" defaultValue="07:00" className="input-field" />
+              </div>
+              <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
+                <input type="checkbox" defaultChecked className="w-4 h-4 rounded" />
+                <span>Bypass for urgent alerts</span>
+              </label>
+            </div>
+
+            <div className="card p-5">
+              <h3 className="font-medium mb-4" style={{ fontFamily: "'Geist', sans-serif" }}>Tone & Style</h3>
+              <select className="input-field w-full">
+                <option>Friendly</option>
+                <option>Formal</option>
+                <option>Casual</option>
+              </select>
+              <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
+                <input type="checkbox" defaultChecked className="w-4 h-4 rounded" />
+                <span>Use emojis</span>
+              </label>
+            </div>
           </div>
         </div>
       </div>

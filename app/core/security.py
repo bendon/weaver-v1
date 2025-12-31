@@ -52,7 +52,7 @@ async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     authorization: Optional[str] = Header(None)
 ) -> Dict:
-    """Get current authenticated user from JWT token"""
+    """Get current authenticated user from JWT token (supports both V1 and V2 tokens)"""
     # Try to get token from HTTPBearer first, then from Authorization header
     token = None
     
@@ -68,7 +68,71 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Try V1 token first
     payload = decode_access_token(token)
+    
+    # If V1 token fails, try V2 token
+    if payload is None:
+        try:
+            from app.v2.core.config import settings as v2_settings
+            
+            # Try to decode with V2 secret
+            try:
+                payload = jwt.decode(
+                    token, 
+                    v2_settings.JWT_SECRET_KEY, 
+                    algorithms=[v2_settings.JWT_ALGORITHM]
+                )
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token has expired",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            except jwt.InvalidTokenError as e:
+                # V2 token also invalid - this is expected if it's a V1 token
+                print(f"V2 token decode failed (expected for V1 tokens): {type(e).__name__}")
+                payload = None
+                # Don't raise, let it fall through to the final error
+            else:
+                # V2 token successfully decoded
+                # V2 token structure - convert to V1 format
+                user_id = payload.get("sub")
+                org_id = payload.get("org_id") or payload.get("organization_id") or ""
+                
+                # Verify token type
+                if payload.get("type") != "access":
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid token type"
+                    )
+                
+                if user_id:
+                    # Return V2 user format (org_id can be empty for new users)
+                    return {
+                        "id": user_id,
+                        "email": payload.get("email"),
+                        "role": payload.get("role"),
+                        "organization_id": org_id if org_id else None,
+                        "permissions": payload.get("permissions", [])
+                    }
+                else:
+                    # V2 token decoded but missing user_id
+                    print(f"V2 token decoded but missing user_id")
+                    payload = None
+        except HTTPException:
+            # Re-raise HTTP exceptions
+            raise
+        except ImportError as e:
+            # V2 module not available - this is OK, just use V1
+            print(f"V2 config not available: {str(e)}")
+            payload = None
+        except Exception as e:
+            # Unexpected error - log but continue
+            print(f"Unexpected error checking V2 token: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            payload = None
     
     if payload is None:
         raise HTTPException(
@@ -84,7 +148,19 @@ async def get_current_user(
             detail="Invalid token payload"
         )
     
-    # Get user from database
+    # Check if this is a V2 token (has org_id instead of organization_id)
+    org_id = payload.get("org_id")
+    if org_id:
+        # V2 token - return directly without database lookup
+        return {
+            "id": user_id,
+            "email": payload.get("email"),
+            "role": payload.get("role"),
+            "organization_id": org_id,
+            "permissions": payload.get("permissions", [])
+        }
+    
+    # V1 token - get user from database
     from app.core.database import get_user_by_id
     user = get_user_by_id(user_id)
     

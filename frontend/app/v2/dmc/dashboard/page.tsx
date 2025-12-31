@@ -1,177 +1,191 @@
 'use client'
 
 import { Calendar, Users, TrendingUp, DollarSign, Clock, AlertCircle, Plane } from 'lucide-react'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const stats = [
-    { label: 'Active Bookings', value: '47', change: '+3 this week', icon: Calendar },
-    { label: 'Departing This Week', value: '12', change: '3 today', icon: Clock },
-    { label: 'Travelers In-Trip', value: '28', change: 'Across 8 bookings', icon: Users },
-    { label: 'Completed (MTD)', value: '156', change: '+12%', trend: 'up', icon: TrendingUp },
-    { label: 'Revenue (MTD)', value: '$428K', change: '+8.2%', trend: 'up', icon: DollarSign },
+    { label: 'Active Bookings', value: '23', change: '+3 this week', icon: Calendar },
+    { label: 'Departing This Week', value: '5', change: null, icon: Clock },
+    { label: 'Travelers In-Trip', value: '8', change: null, icon: Users },
+    { label: 'Completed (Month)', value: '34', change: null, icon: TrendingUp },
+    { label: 'Revenue (Month)', value: '$45,230', change: null, icon: DollarSign },
   ]
 
   const alerts = [
     {
       type: 'urgent',
-      title: 'Flight Delay - BK-2025-XJ8K9P',
-      message: 'Flight UA234 delayed by 2 hours. Traveler Sarah Chen has been notified.',
-      time: '15 min ago'
+      title: 'Flight KQ100 Delayed 2 Hours',
+      message: 'ABC123 · Smith Family · Return flight to London',
+      time: '10 mins ago',
+      action: 'Notify'
     },
     {
-      type: 'info',
-      title: 'Payment Received - BK-2025-L9M2N4',
-      message: 'Final payment of $4,250 received for booking. Trip starts in 3 days.',
-      time: '1 hour ago'
+      type: 'response',
+      title: 'Traveler Question',
+      message: '"What should I pack for the safari?" — Jane Chen',
+      time: null,
+      action: 'Respond'
     },
     {
-      type: 'warning',
-      title: 'Document Missing - BK-2025-P7Q8R9',
-      message: 'Passport copy still pending for traveler Michael Brown.',
-      time: '2 hours ago'
+      type: 'reminder',
+      title: 'Send Visa Reminder',
+      message: 'DEF456 · Johnson Family · 10 days until departure',
+      time: null,
+      action: 'Send'
     }
   ]
 
   const todayDepartures = [
     {
-      code: 'BK-2025-XJ8K9P',
-      traveler: 'Sarah Chen',
-      destination: 'Tokyo',
-      flight: 'UA234',
+      traveler: 'Smith Family',
+      route: 'NBO → MRE (Masai Mara)',
+      time: '09:15',
+      status: 'on-time'
+    },
+    {
+      traveler: 'Johnson Group',
+      route: 'NBO → ABK (Amboseli)',
       time: '14:30',
-      status: 'delayed'
-    },
-    {
-      code: 'BK-2025-M3N4P5',
-      traveler: 'Robert Kim',
-      destination: 'Paris',
-      flight: 'AF456',
-      time: '18:45',
       status: 'on-time'
     },
     {
-      code: 'BK-2025-Q6R7S8',
-      traveler: 'Emily Davis',
-      destination: 'London',
-      flight: 'BA789',
+      traveler: 'Chen Couple',
+      route: 'MRE → NBO',
       time: '21:15',
-      status: 'on-time'
+      status: 'delayed'
     }
   ]
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-subtle">
       {/* Header */}
-      <div className="border-b border-default bg-white">
+      <div className="bg-white border-b border-default">
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl mb-1">Good afternoon, Sarah</h1>
-              <p className="text-secondary">Here's what's happening with your bookings today.</p>
+              <h1>Good morning, John</h1>
+              <p className="text-secondary mt-1">Here's what's happening with your bookings today.</p>
             </div>
-            <button className="btn-primary px-6 py-2.5 rounded-lg font-medium">
-              + New Booking
-            </button>
+            <Link href="/v2/dmc/ai-assistant" className="btn-primary px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              New Booking
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-8 py-6">
-        <div className="grid grid-cols-12 gap-6">
-          {/* Main Column */}
-          <div className="col-span-8 space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-4">
-              {stats.map((stat, idx) => {
-                const Icon = stat.icon
-                return (
-                  <div key={idx} className="card p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="text-tertiary">
-                        <Icon size={20} />
-                      </div>
-                      {stat.trend === 'up' && (
-                        <div className="text-xs text-secondary flex items-center gap-1">
-                          <TrendingUp size={12} />
-                          {stat.change}
-                        </div>
+      <div className="p-8">
+        {/* Stats */}
+        <div className="grid grid-cols-5 gap-4 mb-8">
+          {stats.map((stat, idx) => {
+            const Icon = stat.icon
+            return (
+              <div key={idx} className="card p-5">
+                <p className="text-sm text-secondary">{stat.label}</p>
+                <p className="mt-3" style={{ fontFamily: "'EB Garamond', serif", fontSize: '32px', fontWeight: 400, lineHeight: 1 }}>
+                  {stat.value}
+                  {stat.change && (
+                    <span style={{ fontFamily: "'Geist', sans-serif", fontSize: '14px', color: 'var(--color-text-tertiary)' }}>
+                      {' '}{stat.change}
+                    </span>
+                  )}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="flex gap-6">
+          {/* Alerts */}
+          <div className="card flex-1" style={{ minWidth: 0 }}>
+            <div className="px-5 py-4 border-b border-default flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-black rounded-full"></span>
+                <span className="font-medium">Active Alerts</span>
+              </div>
+              <span className="text-sm text-tertiary">3 require attention</span>
+            </div>
+            <div>
+              {alerts.map((alert, idx) => (
+                <div key={idx} className={`px-5 py-5 ${idx < alerts.length - 1 ? 'border-b border-default' : ''} hover:bg-gray-50 cursor-pointer`}>
+                  <div className="flex gap-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      alert.type === 'urgent' ? 'bg-black text-white' : 'bg-subtle'
+                    }`}>
+                      {alert.type === 'urgent' ? (
+                        <span className="text-white font-semibold">!</span>
+                      ) : alert.type === 'response' ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                       )}
                     </div>
-                    <div className="text-2xl font-semibold mb-1">{stat.value}</div>
-                    <div className="text-sm text-secondary">{stat.label}</div>
-                    {!stat.trend && (
-                      <div className="text-xs text-tertiary mt-1">{stat.change}</div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Active Alerts */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl">Active Alerts</h2>
-                <a href="#" className="text-sm text-secondary hover:text-primary">View all →</a>
-              </div>
-              <div className="space-y-3">
-                {alerts.map((alert, idx) => (
-                  <div
-                    key={idx}
-                    className={`card p-4 ${
-                      alert.type === 'urgent' ? 'border-l-2 border-l-black' : ''
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 mt-0.5">
-                        <AlertCircle size={18} className={alert.type === 'urgent' ? '' : 'text-tertiary'} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {alert.type === 'urgent' && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-black text-white">URGENT</span>
+                        )}
+                        {alert.type === 'response' && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-black text-white">RESPONSE NEEDED</span>
+                        )}
+                        {alert.type === 'reminder' && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(0,0,0,0.06)' }}>REMINDER</span>
+                        )}
+                        {alert.time && (
+                          <span className="text-xs text-tertiary">{alert.time}</span>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 mb-1">
-                          <h3 className="text-sm font-medium">{alert.title}</h3>
-                          <span className="text-xs text-tertiary whitespace-nowrap">{alert.time}</span>
-                        </div>
-                        <p className="text-sm text-secondary">{alert.message}</p>
-                      </div>
+                      <p className="font-medium mt-2" style={{ fontFamily: "'Geist', sans-serif" }}>{alert.title}</p>
+                      <p className="text-sm text-secondary mt-1">{alert.message}</p>
+                      <button className="mt-3 text-sm font-medium hover:underline">{alert.action}</button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Sidebar Column */}
-          <div className="col-span-4">
-            <div className="card p-5">
-              <h3 className="text-lg font-semibold mb-4">Today's Departures</h3>
-              <div className="space-y-4">
-                {todayDepartures.map((departure, idx) => (
-                  <div key={idx} className="pb-4 border-b border-default last:border-0 last:pb-0">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="text-sm font-medium mb-0.5">{departure.traveler}</div>
-                        <div className="text-xs text-secondary">{departure.code}</div>
-                      </div>
-                      <span
-                        className={`badge text-xs ${
-                          departure.status === 'delayed'
-                            ? 'badge-alert'
-                            : 'badge-active'
-                        }`}
-                      >
-                        {departure.status}
+          {/* Today's Departures */}
+          <div className="card" style={{ width: '340px', flexShrink: 0 }}>
+            <div className="px-5 py-4 border-b border-default">
+              <span className="font-medium">Today's Departures</span>
+            </div>
+            <div>
+              {todayDepartures.map((departure, idx) => (
+                <div key={idx} className={`px-5 py-4 ${idx < todayDepartures.length - 1 ? 'border-b border-default' : ''} hover:bg-gray-50 cursor-pointer`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium" style={{ fontFamily: "'Geist', sans-serif" }}>
+                        {departure.traveler}
+                      </p>
+                      <p className="text-sm text-secondary mt-0.5">{departure.route}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-sm">{departure.time}</p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                        departure.status === 'delayed' 
+                          ? 'bg-black text-white' 
+                          : 'border border-black'
+                      }`}>
+                        {departure.status === 'delayed' ? 'Delayed' : 'On Time'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-secondary">
-                      <Plane size={14} />
-                      <span>{departure.flight}</span>
-                      <span>→</span>
-                      <span>{departure.destination}</span>
-                    </div>
-                    <div className="text-xs text-tertiary mt-1 font-mono">{departure.time}</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t border-default">
+              <Link href="/v2/dmc/flight-monitor" className="w-full text-sm text-center text-secondary hover:text-primary block">
+                View All Flights →
+              </Link>
             </div>
           </div>
         </div>

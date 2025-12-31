@@ -7,9 +7,9 @@ export default function DMCLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
       <Sidebar />
-      <main className="flex-1 ml-64">
+      <main className="ml-64 min-h-screen">
         {children}
       </main>
     </div>

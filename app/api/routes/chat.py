@@ -514,9 +514,18 @@ async def send_message(
 async def get_conversations(current_user: dict = Depends(get_current_user)):
     """Get all conversations for user"""
     try:
+        # Handle users without organization_id (V2 users who haven't joined an org yet)
+        org_id = current_user.get('organization_id')
+        if not org_id:
+            # Return empty list for users without organization
+            return {
+                "conversations": [],
+                "total": 0
+            }
+        
         conversations = get_conversations_by_user(
             user_id=current_user['id'],
-            organization_id=current_user['organization_id']
+            organization_id=org_id
         )
         return {
             "conversations": conversations,

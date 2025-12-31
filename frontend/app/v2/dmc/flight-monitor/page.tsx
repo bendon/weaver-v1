@@ -1,106 +1,136 @@
 'use client'
 
-import { Plane, Clock, MapPin } from 'lucide-react'
-
 export default function FlightMonitorPage() {
   const flights = [
     {
-      code: 'UA234',
-      traveler: 'Sarah Chen',
-      bookingCode: 'BK-2025-XJ8K9P',
-      route: 'SFO → NRT',
-      departure: '14:30',
-      arrival: '17:45+1',
+      flight: 'KQ101',
+      airline: 'Kenya Airways',
+      booking: 'ABC123',
+      traveler: 'Smith Family',
+      route: 'LHR → NBO',
+      date: 'Mar 15',
+      scheduled: '21:15',
+      terminal: 'Terminal 4',
+      status: 'on-time',
+      gate: 'B32'
+    },
+    {
+      flight: 'KQ100',
+      airline: 'Kenya Airways',
+      booking: 'ABC123',
+      traveler: 'Smith Family',
+      route: 'NBO → LHR',
+      date: 'Mar 22',
+      scheduled: '23:55',
+      actual: '01:55 +1',
+      terminal: null,
       status: 'delayed',
-      delay: '2 hours',
-      gate: 'G12'
+      delay: '2h',
+      gate: '—'
     },
     {
-      code: 'AF456',
-      traveler: 'Robert Kim',
-      bookingCode: 'BK-2025-M3N4P5',
-      route: 'LAX → CDG',
-      departure: '18:45',
-      arrival: '14:15+1',
+      flight: 'ET302',
+      airline: 'Ethiopian',
+      booking: 'DEF456',
+      traveler: 'Johnson Family',
+      route: 'JFK → JRO',
+      date: 'Mar 28',
+      scheduled: '22:00',
+      terminal: 'Terminal 1',
       status: 'on-time',
-      gate: 'B8'
-    },
-    {
-      code: 'BA789',
-      traveler: 'Emily Davis',
-      bookingCode: 'BK-2025-P7Q8R9',
-      route: 'LHR → DPS',
-      departure: '21:15',
-      arrival: '18:30+1',
-      status: 'on-time',
-      gate: 'A15'
+      gate: '—'
     }
   ]
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-subtle">
       {/* Header */}
-      <div className="border-b border-default bg-white">
+      <div className="bg-white border-b border-default">
         <div className="px-8 py-6">
-          <div className="flex items-center gap-3 mb-1">
-            <Plane size={28} />
-            <h1 className="text-3xl">Flight Monitor</h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1>Flight Monitor</h1>
+              <p className="text-secondary mt-1">Real-time flight tracking</p>
+            </div>
+            <span className="text-sm text-tertiary">Last updated: 2 mins ago</span>
           </div>
-          <p className="text-secondary">Real-time flight tracking for all active bookings</p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-8 py-6">
-        <div className="space-y-4">
-          {flights.map((flight) => (
-            <div key={flight.code} className="card p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold">{flight.code}</h3>
-                    <span
-                      className={`badge ${
-                        flight.status === 'delayed' ? 'badge-alert' : 'badge-active'
-                      }`}
-                    >
-                      {flight.status}
-                    </span>
-                    {flight.delay && (
-                      <span className="text-sm text-secondary">+{flight.delay}</span>
-                    )}
-                  </div>
-                  <div className="text-sm text-secondary mb-1">{flight.traveler}</div>
-                  <div className="text-xs text-tertiary font-mono">{flight.bookingCode}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-tertiary mb-1">Gate</div>
-                  <div className="text-2xl font-semibold">{flight.gate}</div>
-                </div>
-              </div>
+      <div className="p-8">
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="card p-5">
+            <div className="text-sm text-secondary">Monitored</div>
+            <div className="text-3xl font-semibold mt-2" style={{ fontFamily: "'EB Garamond', serif" }}>12</div>
+          </div>
+          <div className="card p-5">
+            <div className="text-sm text-secondary">On Time</div>
+            <div className="text-3xl font-semibold mt-2" style={{ fontFamily: "'EB Garamond', serif" }}>9</div>
+          </div>
+          <div className="card p-5 bg-subtle">
+            <div className="text-sm text-secondary">Delayed</div>
+            <div className="text-3xl font-semibold mt-2" style={{ fontFamily: "'EB Garamond', serif" }}>2</div>
+          </div>
+          <div className="card p-5 bg-black text-white">
+            <div className="text-sm opacity-70">Cancelled</div>
+            <div className="text-3xl font-semibold mt-2" style={{ fontFamily: "'EB Garamond', serif" }}>1</div>
+          </div>
+        </div>
 
-              <div className="flex items-center gap-6">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <div className="text-sm text-tertiary mb-1">Departure</div>
-                      <div className="text-2xl font-semibold font-mono">{flight.departure}</div>
-                    </div>
-                    <div className="flex items-center gap-2 text-secondary">
-                      <div className="h-px flex-1 w-24 bg-border"></div>
-                      <Plane size={18} />
-                      <div className="h-px flex-1 w-24 bg-border"></div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-tertiary mb-1">Arrival</div>
-                      <div className="text-2xl font-semibold font-mono">{flight.arrival}</div>
-                    </div>
-                  </div>
-                  <div className="text-center text-sm text-secondary">{flight.route}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Table */}
+        <div className="card overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-default bg-subtle">
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Flight</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Booking</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Route</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Scheduled</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Status</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wide">Gate</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-default">
+              {flights.map((flight, idx) => (
+                <tr key={idx} className={`table-row ${flight.status === 'delayed' ? 'bg-subtle' : ''}`}>
+                  <td className="px-5 py-4">
+                    <div className="font-medium">{flight.flight}</div>
+                    <div className="text-sm text-tertiary">{flight.airline}</div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="font-mono">{flight.booking}</span>
+                    <div className="text-sm text-tertiary">{flight.traveler}</div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div>{flight.route}</div>
+                    <div className="text-sm text-tertiary">{flight.date}</div>
+                  </td>
+                  <td className="px-5 py-4">
+                    {flight.actual ? (
+                      <>
+                        <span className="font-mono line-through">{flight.scheduled}</span>
+                        <div className="text-sm font-medium">{flight.actual}</div>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-mono">{flight.scheduled}</span>
+                        {flight.terminal && (
+                          <div className="text-sm text-tertiary">{flight.terminal}</div>
+                        )}
+                      </>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className={`badge ${flight.status === 'delayed' ? 'badge-alert' : 'badge-active'}`}>
+                      {flight.status === 'delayed' ? `Delayed ${flight.delay}` : 'On Time'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 font-mono">{flight.gate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
