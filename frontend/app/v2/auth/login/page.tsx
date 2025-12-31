@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import apiClient from '@/v2/lib/api'
+import { apiClient } from '@/v2/lib/api'
 import '@/v2/styles/globals.css'
 
 export default function LoginPage() {
