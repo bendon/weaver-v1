@@ -21,7 +21,7 @@ class MongoDB:
     def connect(self):
         """Connect to MongoDB"""
         try:
-            self.client = MongoClient(settings.MONGODB_URL)
+            self.client = MongoClient(settings.MONGODB_URL, serverSelectionTimeoutMS=5000)
             self.db = self.client[settings.MONGODB_DATABASE]
 
             # Test connection
@@ -32,8 +32,10 @@ class MongoDB:
             self._create_indexes()
 
         except Exception as e:
-            print(f"✗ Failed to connect to MongoDB: {e}")
-            raise
+            print(f"⚠️  Warning: MongoDB not available - V2 features will be limited")
+            print(f"   Error: {e}")
+            self.client = None
+            self.db = None
 
     def _create_indexes(self):
         """Create database indexes"""

@@ -42,6 +42,14 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️  Database initialization error: {e}")
 
+    # Initialize V2 databases
+    try:
+        from app.v2.core.database import init_databases as init_v2_databases
+        init_v2_databases()
+        print("✅ V2 Databases initialized")
+    except Exception as e:
+        print(f"⚠️  V2 Database initialization error: {e}")
+
 
 @app.get("/")
 async def root():
