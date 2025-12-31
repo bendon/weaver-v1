@@ -47,7 +47,11 @@ app.add_middleware(
 )
 
 # Include routers
+from app.v2.api.routes import travelers, bookings
+
 app.include_router(auth.router, prefix="/api/v2/auth", tags=["V2 - Authentication"])
+app.include_router(travelers.router, prefix="/api/v2/travelers", tags=["V2 - Travelers"])
+app.include_router(bookings.router, prefix="/api/v2/bookings", tags=["V2 - Bookings"])
 
 
 # Health check
