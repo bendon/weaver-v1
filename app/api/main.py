@@ -65,7 +65,7 @@ async def health():
 # Import and include routers
 from app.api.routes import auth, bookings, travelers, flights, chat, public, webhooks
 from app.api.routes import flights_extended, hotels, transfers, activities
-from app.api.routes import itineraries, messages, automation, airports
+from app.api.routes import itineraries, messages, automation, airports, shared_sessions
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(bookings.router, prefix="/api/bookings", tags=["Bookings"])
@@ -84,5 +84,6 @@ app.include_router(transfers.router, prefix="/api/transfers", tags=["Transfers"]
 app.include_router(activities.router, prefix="/api/activities", tags=["Activities"])
 app.include_router(chat.router, prefix="/api/chat", tags=["AI Chat"])
 app.include_router(public.router, prefix="/api/public", tags=["Public"])
+app.include_router(shared_sessions.router, prefix="/api", tags=["Shared Sessions"])  # No /api prefix for /s/ routes
 app.include_router(webhooks.router, prefix="/webhooks", tags=["Webhooks"])
 

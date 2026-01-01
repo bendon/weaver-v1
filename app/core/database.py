@@ -412,6 +412,8 @@ def init_database():
         ("follow_up_date", "TEXT"),
         ("follow_up_notes", "TEXT"),
         ("tags", "TEXT"),
+        ("session_token", "TEXT UNIQUE"),
+        ("session_expires_at", "TEXT"),
     ]
 
     for column_name, column_def in migrations:
@@ -1661,4 +1663,135 @@ def get_conversation_messages(conversation_id: str) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"Error getting conversation messages: {e}")
         return []
+
+
+# ============================================================
+# SHARED SESSIONS (Public Links)
+# ============================================================
+
+def create_shared_session(conversation_id: str, expires_in_hours: int = 168) -> Optional[str]:
+    """
+    Create a shareable session token for a conversation (default: 7 days)
+    Returns the session token or None if failed
+    """
+    try:
+        from datetime import datetime, timedelta
+
+        # Generate unique session token
+        session_token = secrets.token_urlsafe(32)
+        expires_at = (datetime.utcnow() + timedelta(hours=expires_in_hours)).isoformat()
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Check if conversation exists
+        cursor.execute("SELECT id FROM conversations WHERE id = ?", (conversation_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return None
+
+        # Update conversation with session token
+        cursor.execute("""
+            UPDATE conversations
+            SET session_token = ?, session_expires_at = ?, updated_at = datetime('now')
+            WHERE id = ?
+        """, (session_token, expires_at, conversation_id))
+
+        conn.commit()
+        conn.close()
+
+        print(f"Created shared session for conversation {conversation_id}: {session_token} (expires: {expires_at})")
+        return session_token
+    except Exception as e:
+        print(f"Error creating shared session: {e}")
+        return None
+
+
+def get_conversation_by_session_token(session_token: str) -> Optional[Dict[str, Any]]:
+    """
+    Get conversation by session token (validates expiration)
+    Returns None if token is invalid or expired
+    """
+    try:
+        from datetime import datetime
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT * FROM conversations
+            WHERE session_token = ?
+        """, (session_token,))
+
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return None
+
+        conversation = dict(row)
+
+        # Check expiration
+        if conversation.get('session_expires_at'):
+            expires_at = datetime.fromisoformat(conversation['session_expires_at'])
+            if datetime.utcnow() > expires_at:
+                print(f"Session token expired: {session_token}")
+                return None
+
+        return conversation
+    except Exception as e:
+        print(f"Error getting conversation by session token: {e}")
+        return None
+
+
+def invalidate_shared_session(conversation_id: str) -> bool:
+    """
+    Invalidate (remove) shared session token for a conversation
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE conversations
+            SET session_token = NULL, session_expires_at = NULL, updated_at = datetime('now')
+            WHERE id = ?
+        """, (conversation_id,))
+
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+
+        return success
+    except Exception as e:
+        print(f"Error invalidating shared session: {e}")
+        return False
+
+
+def extend_shared_session(conversation_id: str, additional_hours: int = 168) -> bool:
+    """
+    Extend the expiration of a shared session by additional hours
+    """
+    try:
+        from datetime import datetime, timedelta
+
+        new_expires_at = (datetime.utcnow() + timedelta(hours=additional_hours)).isoformat()
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE conversations
+            SET session_expires_at = ?, updated_at = datetime('now')
+            WHERE id = ? AND session_token IS NOT NULL
+        """, (new_expires_at, conversation_id))
+
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+
+        return success
+    except Exception as e:
+        print(f"Error extending shared session: {e}")
+        return False
 

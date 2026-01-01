@@ -11,7 +11,9 @@ from pydantic import BaseModel
 from app.core.security import get_current_user
 from app.core.database import (
     create_conversation, get_conversation, get_conversations_by_user,
-    update_conversation, add_conversation_message, get_conversation_messages
+    update_conversation, add_conversation_message, get_conversation_messages,
+    create_shared_session, get_conversation_by_session_token,
+    invalidate_shared_session, extend_shared_session
 )
 
 router = APIRouter()
@@ -678,4 +680,106 @@ async def update_conversation_endpoint(
         raise
     except Exception as e:
         print(f"Error updating conversation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================
+# SHARED SESSIONS (Public Links)
+# ============================================================
+
+class ShareConversationRequest(BaseModel):
+    expires_in_hours: Optional[int] = 168  # Default: 7 days
+
+
+class ShareConversationResponse(BaseModel):
+    success: bool
+    session_token: Optional[str] = None
+    share_url: Optional[str] = None
+    expires_at: Optional[str] = None
+    error: Optional[str] = None
+
+
+@router.post("/conversations/{conversation_id}/share")
+async def share_conversation(
+    conversation_id: str,
+    request: ShareConversationRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate a shareable public link for a conversation.
+    This allows DMCs to share conversations with clients.
+    """
+    try:
+        # Get conversation and verify ownership
+        conversation = get_conversation(conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+        # Verify user has access to this conversation
+        if conversation['organization_id'] != current_user['organization_id']:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Create or regenerate session token
+        session_token = create_shared_session(
+            conversation_id,
+            expires_in_hours=request.expires_in_hours
+        )
+
+        if not session_token:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create shared session"
+            )
+
+        # Build share URL (frontend will be at /s/{token})
+        # In production, use request.base_url or settings.FRONTEND_URL
+        share_url = f"/s/{session_token}"
+
+        # Get updated conversation to get expires_at
+        updated_conv = get_conversation(conversation_id)
+
+        return ShareConversationResponse(
+            success=True,
+            session_token=session_token,
+            share_url=share_url,
+            expires_at=updated_conv.get('session_expires_at')
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error sharing conversation: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/conversations/{conversation_id}/share")
+async def revoke_shared_session(
+    conversation_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Revoke/invalidate a shared session"""
+    try:
+        # Get conversation and verify ownership
+        conversation = get_conversation(conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+        # Verify access
+        if conversation['organization_id'] != current_user['organization_id']:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        success = invalidate_shared_session(conversation_id)
+
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to revoke shared session"
+            )
+
+        return {"success": True, "message": "Shared session revoked"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error revoking shared session: {e}")
         raise HTTPException(status_code=500, detail=str(e))

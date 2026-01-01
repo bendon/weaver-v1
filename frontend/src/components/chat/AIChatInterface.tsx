@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import { Send, Bot, User, Loader2, Plane, Hotel, Calendar, Users, X, MapPin, Mountain, Building2, Palmtree } from 'lucide-react';
+import { Send, Bot, User, Loader2, Plane, Hotel, Calendar, Users, X, MapPin, Mountain, Building2, Palmtree, Share2, Copy, Check } from 'lucide-react';
 import './AIChatInterface.css';
 
 // Utility function to format message timestamp intelligently
@@ -199,6 +199,10 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
   const [input, setInput] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(propConversationId || null);
   const [showStarterForm, setShowStarterForm] = useState<StarterFormData | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharingInProgress, setSharingInProgress] = useState(false);
+  const [copied, setCopied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initializedRef = useRef<boolean>(false);
@@ -526,6 +530,49 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
         sendMessageMutation.mutate(prompt);
       }
     }, 100);
+  };
+
+  const handleShareConversation = async () => {
+    if (!conversationId) {
+      alert('No conversation to share yet. Start chatting first!');
+      return;
+    }
+
+    setSharingInProgress(true);
+    try {
+      const response = await fetch(`/api/chat/conversations/${conversationId}/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          expires_in_hours: 168 // 7 days
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create share link');
+      }
+
+      const data = await response.json();
+      const fullUrl = `${window.location.origin}${data.share_url}`;
+      setShareUrl(fullUrl);
+      setShowShareDialog(true);
+    } catch (error) {
+      console.error('Error sharing conversation:', error);
+      alert('Failed to create share link. Please try again.');
+    } finally {
+      setSharingInProgress(false);
+    }
+  };
+
+  const handleCopyShareUrl = () => {
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const starterPrompts = [
@@ -888,11 +935,27 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
             <p className="chat-header-subtitle">Create bookings through conversation</p>
           </div>
         </div>
-        {onClose && (
-          <button onClick={onClose} className="chat-close-btn">
-            <X size={20} />
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {conversationId && (
+            <button
+              onClick={handleShareConversation}
+              disabled={sharingInProgress}
+              className="chat-share-btn"
+              title="Share conversation with client"
+            >
+              {sharingInProgress ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Share2 size={18} />
+              )}
+            </button>
+          )}
+          {onClose && (
+            <button onClick={onClose} className="chat-close-btn">
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="chat-messages">
@@ -991,6 +1054,90 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ onBookingCreat
           )}
         </button>
       </form>
+
+      {/* Share Dialog */}
+      {showShareDialog && shareUrl && (
+        <div className="starter-form-overlay" onClick={() => setShowShareDialog(false)}>
+          <div className="starter-form-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="starter-form-header">
+              <div className="starter-form-title">
+                <div className="starter-form-icon"><Share2 size={24} /></div>
+                <h3>Share Conversation</h3>
+              </div>
+              <button onClick={() => setShowShareDialog(false)} className="starter-form-close" type="button">
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>
+                Share this conversation link with your client. They'll be able to view and reply to messages.
+                The link expires in 7 days.
+              </p>
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                padding: '12px',
+                background: '#f5f5f5',
+                borderRadius: '8px',
+                marginBottom: '16px'
+              }}>
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '14px',
+                    outline: 'none',
+                    color: '#333'
+                  }}
+                />
+                <button
+                  onClick={handleCopyShareUrl}
+                  style={{
+                    padding: '8px 16px',
+                    background: copied ? '#10b981' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  {copied ? (
+                    <>
+                      <Check size={16} />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={16} />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+              <div style={{
+                padding: '12px',
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#1e40af'
+              }}>
+                <strong>💡 Tip:</strong> Messages sent via this link will appear in this conversation.
+                You'll be notified when your client responds.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
